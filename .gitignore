@@ -1,0 +1,7 @@
+.idea
+/venv
+__pycache__/
+credentials.yml
+site_*.yml
+.python-version
+__pyc
