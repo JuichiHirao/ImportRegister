@@ -122,19 +122,18 @@ class DbMysql:
 
         return makers
 
-    def get_javs(self):
-
-        sql = 'SELECT id, title, post_date, package' \
+    def __get_sql_select(self):
+        sql = 'SELECT id, title, post_date, package ' \
                 '  , thumbnail, sell_date, actress, maker ' \
-                '  , label, download_links, url, product_number, is_selection' \
+                '  , label, download_links, url, is_selection' \
+                '  , product_number, rating, is_site ' \
+                '  , is_parse2, makers_id ' \
                 '  , created_at, updated_at ' \
-                '  FROM jav ' \
-                '  WHERE is_selection = 1' \
-                '  ORDER BY post_date'
+                '  FROM jav '
 
-        self.cursor.execute(sql)
+        return sql
 
-        rs = self.cursor.fetchall()
+    def __get_list(self, rs):
 
         javs = []
         for row in rs:
@@ -150,13 +149,28 @@ class DbMysql:
             jav.label = row[8]
             jav.downloadLinks = row[9]
             jav.url = row[10]
-            jav.productNumber = row[11]
-            jav.isSelection = row[12]
-            jav.createdAt = row[13]
-            jav.updatedAt = row[14]
+            jav.isSelection = row[11]
+            jav.productNumber = row[12]
+            jav.rating = row[13]
+            jav.isSite = row[14]
+            jav.isParse2 = row[15]
+            jav.makersId = row[16]
+            jav.createdAt = row[17]
+            jav.updatedAt = row[18]
             javs.append(jav)
 
-        self.conn.commit()
+        return javs
+
+    def get_javs(self):
+
+        sql = self.__get_sql_select()
+        sql = sql + '  ORDER BY post_date'
+
+        self.cursor.execute(sql)
+
+        rs = self.cursor.fetchall()
+
+        javs = self.__get_list(rs)
 
         return javs
 
@@ -269,18 +283,18 @@ class DbMysql:
                 ', kind, match_product, product_number, sell_date ' \
                 ', maker, title, actresses, rar_flag ' \
                 ', tag, filename, hd_kind, movie_file_id' \
-                ', split_flag, name_only_flag, jav_url) ' \
+                ', split_flag, name_only_flag, jav_url, rating) ' \
                 ' VALUES(%s, %s' \
                 ', %s, %s, %s, %s' \
                 ', %s, %s, %s, %s' \
                 ', %s, %s, %s, %s' \
-                ', %s, %s, %s)'
+                ', %s, %s, %s, %s)'
 
         self.cursor.execute(sql, (importData.copy_text, importData.postDate
                             , importData.kind, importData.matchStr, importData.productNumber, importData.sellDate
                             , importData.maker, importData.title, importData.actress, importData.isRar
                             , importData.tag, importData.filename, importData.hd_kind, 0
-                            , importData.isSplit, importData.isNameOnly, importData.url))
+                            , importData.isSplit, importData.isNameOnly, importData.url, importData.rating))
 
         self.conn.commit()
 

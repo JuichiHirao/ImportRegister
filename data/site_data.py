@@ -17,6 +17,10 @@ class JavData:
         self.downloadLinks = ''
         self.productNumber = ''
         self.isSelection = False
+        self.isParse2 = False
+        self.makersId = 0
+        self.rating = 0
+        self.isSite = 0
         self.createdAt = None
         self.updatedAt = None
 
@@ -44,7 +48,7 @@ class JavData:
         print('  label    [' + self.label + ']')
         print('  post     [' + str(self.postDate) + ']')
         print('  url      [' + self.url + ']')
-        print('  p_number [' + str(self.productNumber) + ']')
+        print('  p_number [' + self.productNumber + ']')
         print(' ')
 
 
@@ -99,8 +103,12 @@ class MovieMakerData:
         self.createdAt = None
         self.updatedAt = None
 
-    def get_maker(self):
-        if len(self.label) <= 0:
+    def get_maker(self, javLabel):
+
+        if self.id == 835:
+            return self.name + ':' + javLabel
+
+        if not self.label or len(self.label) <= 0:
             return self.name
 
         return self.name + ':' + self.label
@@ -135,5 +143,6 @@ class ImportData:
         self.isNameOnly = False
         self.url = ''
         self.postDate = None
+        self.rating = 0
 
 
