@@ -24,8 +24,8 @@ class ImportRegister:
         self.db = mysql_control.DbMysql()
         self.makers = self.db.get_movie_maker()
 
-        # self.is_check = True
-        self.is_check = False
+        self.is_check = True
+        # self.is_check = False
         self.__set_files()
 
     def __set_files(self):
@@ -111,6 +111,29 @@ class ImportRegister:
             if not jav.isSelection == 1:
                 continue
 
+            if jav.actress == '—-':
+                jav.actress = ''
+
+            if jav.isParse2 < 0:
+                if jav.isParse2 == -1:
+                    print('-1 ' + str(jav.id) + ' メーカー完全一致だが、タイトル内に製品番号が一致しない [' + jav.maker + ']' + jav.title)
+                if jav.isParse2 == -2:
+                    print('-2 ' + str(jav.id) + ' メーカーと、タイトル内に製品番号複数一致 [' + jav.maker + ']' + jav.title)
+                if jav.isParse2 == -3:
+                    print('-3 ' + str(jav.id) + ' メーカには複数一致、製品番号に一致しない ID [' + str(jav.id) + '] jav [' + jav.maker + ':' + jav.label + ']' + jav.title)
+                if jav.isParse2 == -4:
+                    print('-4 ' + str(jav.id) + ' maker exist no match, not register [' + jav.maker + ':' + jav.label + '] ' + jav.title)
+                if jav.isParse2 == -5:
+                    print('-5 ' + str(jav.id) + ' match maker other maker.matchStr [' + str(match_maker.id) + ']' + match_maker.matchStr + '  ' + jav.title)
+                if jav.isParse2 == -6:
+                    print('-6 ' + str(jav.id) + ' many match ' + jav.title)
+                if jav.isParse2 == -7:
+                    print('-7 ' + str(jav.id) + ' no match ' + jav.title)
+                else:
+                    print('-x ' + str(jav.id) + ' errno[' + str(jav.isParse2) + '] First error no ' + jav.title)
+
+                # break
+
             if jav.makersId <= 0:
                 continue
 
@@ -167,7 +190,8 @@ class ImportRegister:
             import_data.kind = match_maker.kind
             import_data.maker = match_maker.get_maker(jav.label)
             import_data.sellDate = jav.sellDate
-            import_data.actress = jav.actress
+            # import_data.actress = jav.actress
+            import_data.tag = jav.actress
             import_data.isNameOnly = True
             import_data.url = jav.url
             import_data.rating = jav.rating

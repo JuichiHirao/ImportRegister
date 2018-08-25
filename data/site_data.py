@@ -106,12 +106,12 @@ class MovieMakerData:
     def get_maker(self, javLabel):
 
         if self.id == 835:
-            return self.name + ':' + javLabel
+            return self.name + '：' + javLabel
 
         if not self.label or len(self.label) <= 0:
             return self.name
 
-        return self.name + ':' + self.label
+        return self.name + '：' + self.label
 
     def print(self):
         print('【' + self.name + ':' + self.label + '】')
