@@ -1,6 +1,7 @@
 ALTER TABLE movie_import ADD product_number VARCHAR(255) AFTER url;
 
 ALTER TABLE import ADD rating TINYINT DEFAULT 0 AFTER jav_url;
+ALTER TABLE bj ADD rating TINYINT DEFAULT 0 AFTER is_downloads;
 
 INSERT INTO movie_makers(name, label, kind, match_str, match_product_number)
   VALUES('ゲインコーポレーション', '', 1, 'DMDG', '');
