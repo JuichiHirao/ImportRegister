@@ -24,8 +24,8 @@ class ImportRegister:
         self.db = mysql_control.DbMysql()
         self.makers = self.db.get_movie_maker()
 
-        self.is_check = True
-        # self.is_check = False
+        # self.is_check = True
+        self.is_check = False
         self.__set_files()
 
     def __set_files(self):
@@ -59,6 +59,7 @@ class ImportRegister:
         re_rar = re.compile('part1.rar$', re.IGNORECASE)
         re_movie = re.compile(self.movie_extension, re.IGNORECASE)
 
+        is_not_exists = False
         for file in file_list:
             rar_file = ''
             extract_file = ''
@@ -66,11 +67,17 @@ class ImportRegister:
                 rar_file = os.path.basename(file)
                 print('  rar   ' + rar_file)
                 is_rar = True
-                infolist = rarfile.RarFile(file).infolist()
-                if len(infolist) == 1:
-                    for f in rarfile.RarFile(file).infolist():
-                        extract_file = f.filename
-                        print('  extract ' + str(f.filename))
+                rar_pathname = os.path.join(self.register_path, rar_file)
+                if not os.path.exists(rar_pathname):
+                    print('  rarファイルが存在しない [' + rar_pathname + ']')
+                    is_err_extract = True
+                    continue
+                else:
+                    infolist = rarfile.RarFile(file).infolist()
+                    if len(infolist) == 1:
+                        for f in rarfile.RarFile(file).infolist():
+                            extract_file = f.filename
+                            print('  extract ' + str(f.filename))
 
                 if len(extract_file):
                     extract_pathname = os.path.join(self.register_path, extract_file)
@@ -97,6 +104,39 @@ class ImportRegister:
               + str(is_err_extract))
 
         return result_tuple
+
+    def __get_title_from_copytext(self, copy_text, product_number, match_maker):
+
+        hankaku = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
+        zenkaku = ['１', '２', '３', '４', '５', '６', '７', '８', '９', '０']
+        title = ''
+        movie_kind = ''
+
+        if match_maker.replaceWords is not None and len(match_maker.replaceWords) > 0:
+            words = match_maker.replaceWords.split(' ')
+            for word in words:
+                copy_text = re.sub(word, '', copy_text)
+            '''
+            if ' ' in match_maker.replaceWords:
+                words = ' '.split(match_maker.replaceWords)
+                for word in ' '.split(match_maker.replaceWords):
+                    copy_text = re.sub(word, '', copy_text)
+            else:
+                copy_text = re.sub(match_maker.replaceWords, '', copy_text)
+            '''
+
+        match_search = re.search('[\[]*FHD[\]]*', copy_text)
+        if match_search:
+            title = copy_text.replace(match_search.group(), '').replace(product_number.upper(), '', )\
+                .replace(product_number.lower(), '', )
+            movie_kind = ' FHD'
+        else:
+            title = copy_text.replace(product_number, '').strip()
+
+        if len(movie_kind) > 0:
+            title = title.strip() + movie_kind
+
+        return title
 
     def arrange_execute(self):
 
@@ -154,22 +194,23 @@ class ImportRegister:
                 err_list.append('not exist package ' + str(jav.id) + ' [' + jav.package + '] ' + jav.title)
                 continue
 
-            if jav.makersId > 0:
-                find_filter = filter(lambda maker: maker.id == jav.makersId, self.makers)
-                find_list = list(find_filter)
+            find_filter = filter(lambda maker: maker.id == jav.makersId, self.makers)
+            find_list = list(find_filter)
 
-                if len(find_list) == 1:
-                    match_maker = find_list[0]
-                else:
-                    err_list.append('jav.makersId [' + jav.makersId + '] がmakersに存在しません ' + jav.title)
-                    continue
+            if len(find_list) == 1:
+                match_maker = find_list[0]
+            else:
+                err_list.append('jav.makersId [' + jav.makersId + '] がmakersに存在しません ' + jav.title)
+                continue
 
-            if target_idx > 3:
+            if target_idx > 10:
                 break
             target_idx = target_idx + 1
 
-            print('[' + str(jav.id) + '] ' + jav.title)
             import_data = site_data.ImportData()
+            import_data.title = self.__get_title_from_copytext(jav.title, jav.productNumber, match_maker)
+            print('[' + str(jav.id) + '] [' + import_data.title + ']  ' + jav.title)
+
             is_movie, import_data.isSplit, import_data.isRar, is_err_extract = self.__parse_files(jav, files)
 
             if not is_movie:

@@ -99,7 +99,10 @@ class DbMysql:
 
     def get_movie_maker(self):
 
-        sql = 'SELECT id, name, label, kind, match_str, match_product_number, created_at, updated_at FROM movie_makers ORDER BY id'
+        sql = 'SELECT id ' \
+                + '  ,name, label, kind, match_str' \
+                + '  ,match_product_number, replace_words, registered_by' \
+                + ', created_at, updated_at FROM movie_makers ORDER BY id'
 
         self.cursor.execute(sql)
 
@@ -114,8 +117,10 @@ class DbMysql:
             maker.kind = row[3]
             maker.matchStr = row[4]
             maker.matchProductNumber = row[5]
-            maker.createdAt = row[6]
-            maker.updatedAt = row[7]
+            maker.replaceWords = row[6]
+            maker.registeredBy = row[7]
+            maker.createdAt = row[8]
+            maker.updatedAt = row[9]
             makers.append(maker)
 
         self.conn.commit()
