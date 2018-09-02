@@ -16,6 +16,7 @@ class BjData:
         self.isSelection = False
         self.isDownloads = False
         self.rating = 0
+        self.size = 0
         self.createdAt = None
         self.updatedAt = None
 

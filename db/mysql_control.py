@@ -173,6 +173,7 @@ class DbMysql:
                 '  , is_downloads, rating ' \
                 '  , created_at, updated_at ' \
                 '  FROM bj '
+                # '  WHERE id in (121, 134, 202, 205, 206) '
 
         sql = sql + '  ORDER BY post_date'
 
@@ -332,18 +333,21 @@ class DbMysql:
                 ', kind, match_product, product_number, sell_date ' \
                 ', maker, title, actresses, rar_flag ' \
                 ', tag, filename, hd_kind, movie_file_id' \
-                ', split_flag, name_only_flag, jav_url, rating) ' \
+                ', split_flag, name_only_flag, jav_url, rating ' \
+                ', size) ' \
                 ' VALUES(%s, %s' \
                 ', %s, %s, %s, %s' \
                 ', %s, %s, %s, %s' \
                 ', %s, %s, %s, %s' \
-                ', %s, %s, %s, %s)'
+                ', %s, %s, %s, %s' \
+                ', %s)'
 
         self.cursor.execute(sql, (importData.copy_text, importData.postDate
                             , importData.kind, importData.matchStr, importData.productNumber, importData.sellDate
                             , importData.maker, importData.title, importData.actress, importData.isRar
                             , importData.tag, importData.filename, importData.hd_kind, 0
-                            , importData.isSplit, importData.isNameOnly, importData.url, importData.rating))
+                            , importData.isSplit, importData.isNameOnly, importData.url, importData.rating
+                            , importData.size))
 
         self.conn.commit()
 

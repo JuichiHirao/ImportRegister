@@ -31,6 +31,7 @@ class ImportRegisterBj:
 
         # self.is_check = True
         self.is_check = False
+        self.target_max = 3;
         # self.__set_files()
 
     def arrange_execute(self):
@@ -58,10 +59,12 @@ class ImportRegisterBj:
 
             rar_filename = bj.downloadLink.split('/')[-1]
             rar_pathname = os.path.join(self.register_path, rar_filename)
+            size = 0
             if not os.path.exists(rar_pathname):
                 err_list.append('[' + bj.id + '] RARが存在しない [' + rar_pathname + ']')
                 is_err = True
             else:
+                size = os.path.getsize(rar_pathname)
                 print('  OK ' + rar_pathname)
 
             base_name = rar_filename.replace('.rar', '')
@@ -76,9 +79,12 @@ class ImportRegisterBj:
             if is_err:
                 break
 
+            tag = ''
             actress = self.__get_actress(bj.title, bj.postedIn)
             if len(actress) > 0:
-                print('    actress [' + import_data.actress + ']')
+                print('    actress [' + actress + ']')
+                tag = 'KOREAN BJ ' + actress
+                tag = tag.replace('BJ BJ ', 'BJ ')
                 target_name = base_name + ' ' + bj.title + ' ' + actress
             else:
                 target_name = base_name + ' ' + bj.title
@@ -104,24 +110,28 @@ class ImportRegisterBj:
             import_data.title = bj.title
             import_data.postDate = bj.postDate
             import_data.copy_text = target_name
+            import_data.productNumber = base_name
             import_data.kind = 5
             import_data.actress = actress
             import_data.isNameOnly = True
             import_data.url = bj.url
             import_data.rating = bj.rating
+            import_data.tag = tag
+            import_data.maker = bj.postedIn
+            import_data.size = size
 
             if not self.is_check:
                 self.db.export_import(import_data)
                 self.db.update_bj_is_selection(bj.id, 9)
 
-            if target_idx > 0:
+            if target_idx > self.target_max:
                 break
 
             target_idx = target_idx + 1
 
     def __get_actress(self, title, posted_in):
         actress = ''
-        if '201' in title:
+        if '201' in title and "KOREAN BJ" in title:
             match = re.search('[A-Z ]* 201', title)
             if match:
                 replace_str = match.group().replace(' 201', '')
