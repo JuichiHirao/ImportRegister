@@ -1,6 +1,40 @@
 import re
 
 
+class BjData:
+
+    def __init__(self):
+        self.id = -1
+        self.title = ''
+        self.postDate = None
+        self.package = ''
+        self.thumbnails = ''
+        self.thumbnailsCount = ''
+        self.downloadLink = ''
+        self.url = ''
+        self.postedIn = ''
+        self.isSelection = False
+        self.isDownloads = False
+        self.rating = 0
+        self.size = 0
+        self.createdAt = None
+        self.updatedAt = None
+
+    def print(self):
+        print('【' + self.title + '】')
+        print('  postDate      [' + str(self.postDate) + ']')
+        print('  thumbnails    [' + self.thumbnails + ']')
+        print('  thumbnailsCnt [' + str(self.thumbnailsCount) + ']')
+        print('  downloadLinks [' + self.downloadLink + ']')
+        print('  url           [' + self.url + ']')
+        print('  postedIn      [' + self.postedIn + ']')
+        print('  postedIn      [' + self.postedIn + ']')
+        print('  isSelection   [' + str(self.isSelection) + ']')
+        print('  isDownloads   [' + str(self.isDownloads) + ']')
+        print('  rating        [' + str(self.rating) + ']')
+        print(' ')
+
+
 class JavData:
 
     def __init__(self):

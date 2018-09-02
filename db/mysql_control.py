@@ -166,6 +166,40 @@ class DbMysql:
 
         return javs
 
+    def get_bj(self):
+        sql = 'SELECT id' \
+                '  , title, post_date, thumbnails, thumbnails_count ' \
+                '  , download_link, url, posted_in, is_selection ' \
+                '  , is_downloads, rating ' \
+                '  , created_at, updated_at ' \
+                '  FROM bj '
+                # '  WHERE id in (121, 134, 202, 205, 206) '
+
+        sql = sql + '  ORDER BY post_date'
+
+        self.cursor.execute(sql)
+
+        rs = self.cursor.fetchall()
+        bjs = []
+        for row in rs:
+            bj = site_data.BjData()
+            bj.id = row[0]
+            bj.title = row[1]
+            bj.postDate = row[2]
+            bj.thumbnails = row[3]
+            bj.thumbnailsCount = row[4]
+            bj.downloadLink = row[5]
+            bj.url = row[6]
+            bj.postedIn = row[7]
+            bj.isSelection = row[8]
+            bj.isDownloads = row[9]
+            bj.rating = row[10]
+            bj.createdAt = row[11]
+            bj.updatedAt = row[12]
+            bjs.append(bj)
+
+        return bjs
+
     def get_javs(self):
 
         sql = self.__get_sql_select()
@@ -247,6 +281,17 @@ class DbMysql:
 
         self.conn.commit()
 
+    def update_bj_is_selection(self, id, is_selection):
+
+        sql = 'UPDATE bj ' \
+                '  SET is_selection = %s ' \
+                '  WHERE id = %s'
+
+        self.cursor.execute(sql, (is_selection, id))
+        print("bj update id [" + str(id) + "]")
+
+        self.conn.commit()
+
     def update_jav_is_selection(self, id, is_selection):
 
         sql = 'UPDATE jav ' \
@@ -288,18 +333,21 @@ class DbMysql:
                 ', kind, match_product, product_number, sell_date ' \
                 ', maker, title, actresses, rar_flag ' \
                 ', tag, filename, hd_kind, movie_file_id' \
-                ', split_flag, name_only_flag, jav_url, rating) ' \
+                ', split_flag, name_only_flag, jav_url, rating ' \
+                ', size) ' \
                 ' VALUES(%s, %s' \
                 ', %s, %s, %s, %s' \
                 ', %s, %s, %s, %s' \
                 ', %s, %s, %s, %s' \
-                ', %s, %s, %s, %s)'
+                ', %s, %s, %s, %s' \
+                ', %s)'
 
         self.cursor.execute(sql, (importData.copy_text, importData.postDate
                             , importData.kind, importData.matchStr, importData.productNumber, importData.sellDate
                             , importData.maker, importData.title, importData.actress, importData.isRar
                             , importData.tag, importData.filename, importData.hd_kind, 0
-                            , importData.isSplit, importData.isNameOnly, importData.url, importData.rating))
+                            , importData.isSplit, importData.isNameOnly, importData.url, importData.rating
+                            , importData.size))
 
         self.conn.commit()
 
