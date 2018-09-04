@@ -55,6 +55,7 @@ class JavData:
         self.makersId = 0
         self.rating = 0
         self.isSite = 0
+        self.size = 0
         self.createdAt = None
         self.updatedAt = None
 

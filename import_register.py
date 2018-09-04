@@ -5,6 +5,7 @@ import glob
 import re
 import rarfile
 import shutil
+import sys
 
 
 class ImportRegister:
@@ -35,24 +36,26 @@ class ImportRegister:
 
     def __get_target_files(self, jav):
 
+        files = []
         re_pattern1 = re.compile('.*' + jav.productNumber + '.*', re.IGNORECASE)
         find_filter = filter(lambda file: re_pattern1.match(file), self.files)
-
         find_list = list(find_filter)
 
-        if len(find_list) > 0:
-            return find_list
+        re_movie = re.compile(self.movie_extension, re.IGNORECASE)
+        for data in find_list:
+            if re_movie.search(data):
+                files.append(data)
 
-        files = []
-        for link in jav.downloadLinks.split(' '):
-            files.append(link.split('/')[-1].replace('.html', ''))
+        if len(files) <= 0:
+            for link in jav.downloadLinks.split(' '):
+                files.append(link.split('/')[-1].replace('.html', ''))
 
         return files
 
     def __parse_files(self, jav, file_list):
 
         is_rar = False
-        is_movie = False
+        movie_size = 0
         is_split = False
         is_err_extract = False
 
@@ -89,9 +92,12 @@ class ImportRegister:
                 filename = os.path.basename(file)
                 name, ext = os.path.splitext(filename)
                 print('  movie ' + filename)
-                if is_movie:
-                    is_split = True
-                is_movie = True
+                size_pathname = os.path.join(self.register_path, file)
+                if os.path.isfile(size_pathname):
+                    if movie_size > 0:
+                        is_split = True
+                    size = os.path.getsize(size_pathname)
+                    movie_size = movie_size + size
 
             if len(rar_file) > 0:
                 if name in rar_file:
@@ -99,8 +105,8 @@ class ImportRegister:
                 else:
                     is_err_extract = True
 
-        result_tuple = (is_movie, is_split, is_rar, is_err_extract)
-        print('  movie ' + str(is_movie) + '  split ' + str(is_split) + '  rar ' + str(is_rar) + '  err extract '
+        result_tuple = (movie_size, is_split, is_rar, is_err_extract)
+        print('  movie_size ' + str(movie_size) + '  split ' + str(is_split) + '  rar ' + str(is_rar) + '  err extract '
               + str(is_err_extract))
 
         return result_tuple
@@ -211,9 +217,9 @@ class ImportRegister:
             import_data.title = self.__get_title_from_copytext(jav.title, jav.productNumber, match_maker)
             print('[' + str(jav.id) + '] [' + import_data.title + ']  ' + jav.title)
 
-            is_movie, import_data.isSplit, import_data.isRar, is_err_extract = self.__parse_files(jav, files)
+            movie_size, import_data.isSplit, import_data.isRar, is_err_extract = self.__parse_files(jav, files)
 
-            if not is_movie:
+            if movie_size <= 0:
                 err_list.append('movie not found ' + str(jav.id) + '  [' + match_maker.matchStr + ']  ' + jav.title)
                 is_err = True
 
@@ -236,6 +242,7 @@ class ImportRegister:
             import_data.isNameOnly = True
             import_data.url = jav.url
             import_data.rating = jav.rating
+            import_data.size = movie_size
 
             filename, ext = os.path.splitext(pathname_p)
             dest_p = os.path.join(self.register_path, import_data.productNumber + ext)

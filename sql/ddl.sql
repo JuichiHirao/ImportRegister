@@ -11,3 +11,11 @@ INSERT INTO movie_makers(name, label, kind, match_str, match_product_number)
   VALUES('ゲインコーポレーション', '', 1, 'DMDG', '');
 INSERT INTO movie_makers(name, label, kind, match_str, match_product_number)
   VALUES('MGS', 'ゲリラ', 1, '302GEBB', '');
+INSERT INTO movie_makers(name, match_name, label, kind, match_str, match_product_number)
+  VALUES('SODクリエイト', 'SODクリエイト', 'ハメ撮り人生相談', 1, 'TIGR', '');
+
+SELECT * FROM jav WHERE product_number = 'GEGE-021';
+UPDATE jav SET is_selection = 19 WHERE id = 969;
+UPDATE jav SET is_selection = 19 WHERE id = 968;
+
+SELECT * FROM jav WHERE id = 945;

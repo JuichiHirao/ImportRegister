@@ -31,7 +31,7 @@ class ImportRegisterBj:
 
         # self.is_check = True
         self.is_check = False
-        self.target_max = 3;
+        self.target_max = 10;
         # self.__set_files()
 
     def arrange_execute(self):
