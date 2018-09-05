@@ -25,8 +25,8 @@ class ImportRegister:
         self.db = mysql_control.DbMysql()
         self.makers = self.db.get_movie_maker()
 
-        # self.is_check = True
-        self.is_check = False
+        self.is_check = True
+        # self.is_check = False
         self.__set_files()
 
     def __set_files(self):

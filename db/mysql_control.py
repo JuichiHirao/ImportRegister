@@ -101,8 +101,11 @@ class DbMysql:
 
         sql = 'SELECT id ' \
                 + '  ,name, label, kind, match_str' \
-                + '  ,match_product_number, replace_words, registered_by' \
-                + ', created_at, updated_at FROM movie_makers ORDER BY id'
+                + '  ,match_product_number, replace_words, registered_by ' \
+                + '  ,created_at, updated_at ' \
+                + '  FROM maker ' \
+                + '  WHERE deleted = 0 ' \
+                + '  ORDER BY id'
 
         self.cursor.execute(sql)
 
