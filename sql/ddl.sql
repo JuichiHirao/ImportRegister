@@ -17,5 +17,16 @@ INSERT INTO movie_makers(name, match_name, label, kind, match_str, match_product
 SELECT * FROM jav WHERE product_number = 'GEGE-021';
 UPDATE jav SET is_selection = 19 WHERE id = 969;
 UPDATE jav SET is_selection = 19 WHERE id = 968;
+UPDATE jav SET is_selection = 19 WHERE id = 729;
+UPDATE jav SET is_selection = 19 WHERE id = 619;
 
-SELECT * FROM jav WHERE id = 945;
+
+SELECT count(*) FROM jav WHERE product_number is null or product_number = '';
+
+SELECT * FROM jav WHERE is_selection not in (-1, 9, 19) ORDER BY post_date DESC;
+
+SELECT * FROM maker where match_str like 'KTR%';
+
+INSERT INTO maker(name, match_name, label, kind, match_str, match_product_number)
+  VALUES('親父の個撮', '親父の個撮', '', 1, 'OYJ', '');
+

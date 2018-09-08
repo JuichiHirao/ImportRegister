@@ -18,6 +18,7 @@ class ImportRegister:
         # rarfile.UNRAR_TOOL = r'C:\\SHARE\\unrar.exe'
         self.movie_extension = '.*\.avi$|.*\.wmv$|.*\.mpg$|.*ts$|.*divx$|.*mp4$' \
                                '|.*asf$|.*mkv$|.*rm$|.*rmvb$|.*m4v$|.*3gp$'
+        self.rar_extension = '.*\.rar$'
 
         self.store_path = "D:\DATA\jav-save"
         self.register_path = "D:\DATA\Downloads"
@@ -27,6 +28,8 @@ class ImportRegister:
 
         self.is_check = True
         # self.is_check = False
+
+        self.target_max = 20
         self.__set_files()
 
     def __set_files(self):
@@ -42,8 +45,11 @@ class ImportRegister:
         find_list = list(find_filter)
 
         re_movie = re.compile(self.movie_extension, re.IGNORECASE)
+        re_rar = re.compile(self.rar_extension, re.IGNORECASE)
         for data in find_list:
             if re_movie.search(data):
+                files.append(data)
+            if re_rar.search(data):
                 files.append(data)
 
         if len(files) <= 0:
@@ -76,17 +82,19 @@ class ImportRegister:
                     is_err_extract = True
                     continue
                 else:
-                    infolist = rarfile.RarFile(file).infolist()
-                    if len(infolist) == 1:
-                        for f in rarfile.RarFile(file).infolist():
+                    rar_archive = rarfile.RarFile(rar_pathname)
+                    rar_infolist = rar_archive.infolist()
+                    if len(rar_infolist) >= 1:
+                        for f in rar_infolist:
                             extract_file = f.filename
-                            print('  extract ' + str(f.filename))
 
-                if len(extract_file):
-                    extract_pathname = os.path.join(self.register_path, extract_file)
-                    if not os.path.exists(extract_pathname):
-                        rarfile.RarFile(file).extractall()
-                        print('  extracted rar [' + extract_file + ']')
+                            extract_pathname = os.path.join(self.register_path, extract_file)
+                            if not os.path.exists(extract_pathname):
+                                is_err_extract = True
+                                print('  rarファイルが解凍されていない [' + extract_file + ']' + file)
+                            else:
+                                if extract_file not in file_list:
+                                    file_list.append(extract_pathname)
 
             if re_movie.search(file):
                 filename = os.path.basename(file)
@@ -98,12 +106,6 @@ class ImportRegister:
                         is_split = True
                     size = os.path.getsize(size_pathname)
                     movie_size = movie_size + size
-
-            if len(rar_file) > 0:
-                if name in rar_file:
-                    print('  extracted rar ' + rar_file)
-                else:
-                    is_err_extract = True
 
         result_tuple = (movie_size, is_split, is_rar, is_err_extract)
         print('  movie_size ' + str(movie_size) + '  split ' + str(is_split) + '  rar ' + str(is_rar) + '  err extract '
@@ -163,17 +165,17 @@ class ImportRegister:
             if jav.isParse2 < 0:
                 if jav.isParse2 == -1:
                     print('-1 ' + str(jav.id) + ' メーカー完全一致だが、タイトル内に製品番号が一致しない [' + jav.maker + ']' + jav.title)
-                if jav.isParse2 == -2:
+                elif jav.isParse2 == -2:
                     print('-2 ' + str(jav.id) + ' メーカーと、タイトル内に製品番号複数一致 [' + jav.maker + ']' + jav.title)
-                if jav.isParse2 == -3:
+                elif jav.isParse2 == -3:
                     print('-3 ' + str(jav.id) + ' メーカには複数一致、製品番号に一致しない ID [' + str(jav.id) + '] jav [' + jav.maker + ':' + jav.label + ']' + jav.title)
-                if jav.isParse2 == -4:
+                elif jav.isParse2 == -4:
                     print('-4 ' + str(jav.id) + ' maker exist no match, not register [' + jav.maker + ':' + jav.label + '] ' + jav.title)
-                if jav.isParse2 == -5:
-                    print('-5 ' + str(jav.id) + ' match maker other maker.matchStr [' + str(match_maker.id) + ']' + match_maker.matchStr + '  ' + jav.title)
-                if jav.isParse2 == -6:
+                elif jav.isParse2 == -5:
+                    print('-5 ' + str(jav.id) + 'メーカー[' + jav.maker + ':' + jav.label + '] に一致したが、タイトル内にmatchStrの文字列がない ' + jav.title)
+                elif jav.isParse2 == -6:
                     print('-6 ' + str(jav.id) + ' many match ' + jav.title)
-                if jav.isParse2 == -7:
+                elif jav.isParse2 == -7:
                     print('-7 ' + str(jav.id) + ' no match ' + jav.title)
                 else:
                     print('-x ' + str(jav.id) + ' errno[' + str(jav.isParse2) + '] First error no ' + jav.title)
@@ -209,8 +211,9 @@ class ImportRegister:
                 err_list.append('jav.makersId [' + jav.makersId + '] がmakersに存在しません ' + jav.title)
                 continue
 
-            if target_idx > 10:
+            if target_idx < 0 or target_idx > self.target_max:
                 break
+
             target_idx = target_idx + 1
 
             import_data = site_data.ImportData()
