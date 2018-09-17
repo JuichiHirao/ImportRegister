@@ -6,6 +6,7 @@ ALTER TABLE bj ADD size TINYINT DEFAULT 0 AFTER rating;
 ALTER TABLE bj DROP size;
 ALTER TABLE import ADD size BIGINT DEFAULT 0 AFTER rating;
 ALTER TABLE import DROP size;
+ALTER TABLE jav ADD download_files TEXT AFTER download_links;
 
 INSERT INTO movie_makers(name, label, kind, match_str, match_product_number)
   VALUES('ゲインコーポレーション', '', 1, 'DMDG', '');
@@ -20,6 +21,7 @@ UPDATE jav SET is_selection = 19 WHERE id = 968;
 UPDATE jav SET is_selection = 19 WHERE id = 729;
 UPDATE jav SET is_selection = 19 WHERE id = 619;
 
+SELECT * FROM jav WHERE is_selection = 1 ORDER BY post_date;
 
 SELECT count(*) FROM jav WHERE product_number is null or product_number = '';
 
@@ -29,4 +31,8 @@ SELECT * FROM maker where match_str like 'KTR%';
 
 INSERT INTO maker(name, match_name, label, kind, match_str, match_product_number)
   VALUES('親父の個撮', '親父の個撮', '', 1, 'OYJ', '');
+INSERT INTO maker (name, match_name, label, kind, match_str, match_product_number, site_kind, replace_words, p_number_gen, deleted, registered_by)
+  VALUES ('MGS', 'MGS', '俺の素人', 1, 'ORE', '', 0, null, null, 0, 'MANUAL2018-09-15');
 
+INSERT INTO maker (name, match_name, label, kind, match_str, match_product_number, site_kind, replace_words, p_number_gen, deleted, registered_by)
+  VALUES ('パコパコ団とゆかいな仲間たち', 'パコパコ団とゆかいな仲間たち', 'HHグループ', 1, 'PKPD', '', 0, null, null, 0, 'MANUAL2018-09-16');

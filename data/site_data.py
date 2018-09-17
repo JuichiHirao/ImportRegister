@@ -55,7 +55,6 @@ class JavData:
         self.makersId = 0
         self.rating = 0
         self.isSite = 0
-        self.size = 0
         self.createdAt = None
         self.updatedAt = None
 
@@ -83,7 +82,10 @@ class JavData:
         print('  label    [' + self.label + ']')
         print('  post     [' + str(self.postDate) + ']')
         print('  url      [' + self.url + ']')
-        print('  p_number [' + self.productNumber + ']')
+        if self.productNumber:
+            print('  p_number [' + self.productNumber + ']')
+        else:
+            print('  p_number is None')
         print(' ')
 
 
@@ -131,11 +133,14 @@ class MovieMakerData:
     def __init__(self):
         self.id = -1
         self.name = ''
+        self.matchName = ''
         self.label = ''
         self.kind = 0
         self.matchStr = ''
         self.matchProductNumber = ''
+        self.siteKind = 0
         self.replaceWords = ''
+        self.pNumberGen = 0
         self.registeredBy = ''
         self.createdAt = None
         self.updatedAt = None

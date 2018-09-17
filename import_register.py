@@ -5,7 +5,8 @@ import glob
 import re
 import rarfile
 import shutil
-import sys
+
+from tool import product_number_register
 
 
 class ImportRegister:
@@ -26,6 +27,8 @@ class ImportRegister:
         self.db = mysql_control.DbMysql()
         self.makers = self.db.get_movie_maker()
 
+        self.is_recover_check = True
+        # self.is_recover_check = False
         self.is_check = True
         # self.is_check = False
 
@@ -39,6 +42,9 @@ class ImportRegister:
 
     def __get_target_files(self, jav):
 
+        idx = 0
+        if jav.id == 3825:
+            idx = idx + 1
         files = []
         re_pattern1 = re.compile('.*' + jav.productNumber + '.*', re.IGNORECASE)
         find_filter = filter(lambda file: re_pattern1.match(file), self.files)
@@ -54,7 +60,18 @@ class ImportRegister:
 
         if len(files) <= 0:
             for link in jav.downloadLinks.split(' '):
-                files.append(link.split('/')[-1].replace('.html', ''))
+                link_filename = link.split('/')[-1].replace('.html', '')
+                pathname = os.path.join(self.register_path, link_filename)
+                if os.path.isfile(pathname):
+                    files.append(pathname)
+                else:
+                    # [030718] XXXX
+                    search_file = re.search('\[[0-3][0-9][0-1][0-9][1-2][0-9]\]', link_filename)
+                    if search_file:
+                        replace_filename = link_filename.replace(search_file.group(), '').strip()
+                        replace_pathname = os.path.join(self.register_path, replace_filename)
+                        if os.path.isfile(replace_pathname):
+                            files.append(replace_filename)
 
         return files
 
@@ -146,12 +163,23 @@ class ImportRegister:
 
         return title
 
+    def recover_p_number_register(self, jav, tool):
+
+        jav.productNumber, seller, sell_date, match_maker, ng_reason = tool.parse2(jav, self.is_recover_check)
+        print(jav.productNumber + ' title [' + jav.title + ']')
+        if match_maker is None:
+            print('no match maker '  ' title [' + jav.title + ']')
+
+        if not self.is_recover_check:
+            self.db.update_jav_product_number(jav.id, jav.productNumber)
+
     def arrange_execute(self):
 
         javs = self.db.get_javs()
 
         err_list = []
         target_idx = 1
+        p_number_tool = product_number_register.ProductNumberRegister()
         for idx, jav in enumerate(javs):
 
             is_err = False
@@ -180,6 +208,8 @@ class ImportRegister:
                 else:
                     print('-x ' + str(jav.id) + ' errno[' + str(jav.isParse2) + '] First error no ' + jav.title)
 
+                self.recover_p_number_register(jav, p_number_tool)
+
                 # break
 
             if jav.makersId <= 0:
@@ -191,8 +221,15 @@ class ImportRegister:
 
             files = self.__get_target_files(jav)
 
-            pathname_th = os.path.join(self.store_path, jav.thumbnail)
-            if not os.path.isfile(pathname_th):
+            is_exist = False
+            for thumbnail in jav.thumbnail.split(' '):
+                pathname_th = os.path.join(self.store_path, thumbnail)
+                if os.path.isfile(pathname_th):
+                    jav.thumbnail = thumbnail
+                    is_exist = True
+                    break
+
+            if not is_exist:
                 err_list.append('not exist thumbnail ' + str(jav.id) + '[' + jav.thumbnail + '] ' + jav.title)
                 continue
 
@@ -223,7 +260,10 @@ class ImportRegister:
             movie_size, import_data.isSplit, import_data.isRar, is_err_extract = self.__parse_files(jav, files)
 
             if movie_size <= 0:
-                err_list.append('movie not found ' + str(jav.id) + '  [' + match_maker.matchStr + ']  ' + jav.title)
+                if is_err_extract:
+                    err_list.append('err_extract ' + str(jav.id) + '  [' + match_maker.matchStr + ']  ' + jav.title)
+                else:
+                    err_list.append('movie not found ' + str(jav.id) + '  [' + match_maker.matchStr + ']  ' + jav.title)
                 is_err = True
 
             if is_err_extract:
