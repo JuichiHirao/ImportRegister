@@ -36,3 +36,5 @@ INSERT INTO maker (name, match_name, label, kind, match_str, match_product_numbe
 
 INSERT INTO maker (name, match_name, label, kind, match_str, match_product_number, site_kind, replace_words, p_number_gen, deleted, registered_by)
   VALUES ('パコパコ団とゆかいな仲間たち', 'パコパコ団とゆかいな仲間たち', 'HHグループ', 1, 'PKPD', '', 0, null, null, 0, 'MANUAL2018-09-16');
+
+SELECT * FROM jav WHERE download_files is not null order by id;

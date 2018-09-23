@@ -43,7 +43,7 @@ class ImportRegister:
     def __get_target_files(self, jav):
 
         idx = 0
-        if jav.id == 3825:
+        if jav.id == 5744:
             idx = idx + 1
         files = []
         re_pattern1 = re.compile('.*' + jav.productNumber + '.*', re.IGNORECASE)
@@ -85,7 +85,7 @@ class ImportRegister:
         re_rar = re.compile('part1.rar$', re.IGNORECASE)
         re_movie = re.compile(self.movie_extension, re.IGNORECASE)
 
-        is_not_exists = False
+        movie_count = 0
         for file in file_list:
             rar_file = ''
             extract_file = ''
@@ -110,7 +110,7 @@ class ImportRegister:
                                 is_err_extract = True
                                 print('  rarファイルが解凍されていない [' + extract_file + ']' + file)
                             else:
-                                if extract_file not in file_list:
+                                if extract_pathname not in file_list:
                                     file_list.append(extract_pathname)
 
             if re_movie.search(file):
@@ -119,10 +119,15 @@ class ImportRegister:
                 print('  movie ' + filename)
                 size_pathname = os.path.join(self.register_path, file)
                 if os.path.isfile(size_pathname):
-                    if movie_size > 0:
-                        is_split = True
                     size = os.path.getsize(size_pathname)
                     movie_size = movie_size + size
+
+                re_movie = re.compile(self.movie_extension, re.IGNORECASE)
+                if re_movie.search(file):
+                    movie_count += 1
+
+        if movie_count > 1:
+            is_split = True
 
         result_tuple = (movie_size, is_split, is_rar, is_err_extract)
         print('  movie_size ' + str(movie_size) + '  split ' + str(is_split) + '  rar ' + str(is_rar) + '  err extract '
