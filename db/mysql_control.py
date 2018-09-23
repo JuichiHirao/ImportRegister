@@ -74,6 +74,94 @@ class DbMysql:
 
         return exist_flag
 
+    def get_url_jav2s(self, p_number):
+
+        sql = 'SELECT id, title, url FROM jav2 WHERE title like %s '
+
+        self.cursor.execute(sql, (p_number, ))
+
+        # rowcountは戻りがあっても、正しい件数を取得出来ない
+        # rowcount = self.cursor.rowcount
+        rs = self.cursor.fetchall()
+
+        jav2s = []
+        for row in rs:
+            jav2 = site_data.Jav2Data()
+            jav2.id = row[0]
+            jav2.title = row[1]
+            jav2.url = row[2]
+            jav2s.append(jav2)
+
+        self.conn.commit()
+
+        return jav2s
+
+    def get_jav_by_id(self, id):
+
+        sql = self.__get_sql_select()
+        sql = sql + '  WHERE id = %s '
+
+        self.cursor.execute(sql, (id, ))
+
+        rs = self.cursor.fetchall()
+
+        javs = self.__get_list(rs)
+
+        if javs is None or len(javs) <= 0:
+            return None
+
+        return javs[0]
+
+    def __get_sql_select(self):
+        sql = 'SELECT id, title, post_date, package ' \
+                '  , thumbnail, sell_date, actress, maker ' \
+                '  , label, download_links, url, is_selection' \
+                '  , product_number, rating, is_site ' \
+                '  , is_parse2, makers_id ' \
+                '  , created_at, updated_at ' \
+                '  FROM jav '
+
+        return sql
+
+    def __get_list(self, rs):
+
+        javs = []
+        for row in rs:
+            jav = site_data.JavData()
+            jav.id = row[0]
+            jav.title = row[1]
+            jav.postDate = row[2]
+            jav.package = row[3]
+            jav.thumbnail = row[4]
+            jav.sellDate = row[5]
+            jav.actress = row[6]
+            jav.maker = row[7]
+            jav.label = row[8]
+            jav.downloadLinks = row[9]
+            jav.url = row[10]
+            jav.isSelection = row[11]
+            jav.productNumber = row[12]
+            jav.rating = row[13]
+            jav.isSite = row[14]
+            jav.isParse2 = row[15]
+            jav.makersId = row[16]
+            jav.createdAt = row[17]
+            jav.updatedAt = row[18]
+            javs.append(jav)
+
+        return javs
+
+    def update_jav_package(self, id, package_filename):
+
+        sql = 'UPDATE jav ' \
+                '  SET package = %s ' \
+                '  WHERE id = %s'
+
+        self.cursor.execute(sql, (package_filename, id))
+        print("jav update id [" + str(id) + "]")
+
+        self.conn.commit()
+
     def get_url_javs(self):
 
         # sql = 'SELECT id, url FROM jav WHERE download_links = "" ORDER BY post_date'
@@ -100,12 +188,14 @@ class DbMysql:
     def get_movie_maker(self):
 
         sql = 'SELECT id ' \
-                + '  ,name, label, kind, match_str' \
-                + '  ,match_product_number, replace_words, registered_by ' \
-                + '  ,created_at, updated_at ' \
-                + '  FROM maker ' \
-                + '  WHERE deleted = 0 ' \
-                + '  ORDER BY id'
+              '  , name, match_name, label, kind ' \
+              '  , match_str, match_product_number, site_kind, replace_words ' \
+              '  , p_number_gen, registered_by ' \
+              '  , created_at, updated_at ' \
+              '  , created_at, updated_at ' \
+              '  FROM maker ' \
+              '  WHERE deleted = 0 ' \
+              '  ORDER BY id'
 
         self.cursor.execute(sql)
 
@@ -116,14 +206,17 @@ class DbMysql:
             maker = site_data.MovieMakerData()
             maker.id = row[0]
             maker.name = row[1]
-            maker.label = row[2]
-            maker.kind = row[3]
-            maker.matchStr = row[4]
-            maker.matchProductNumber = row[5]
-            maker.replaceWords = row[6]
-            maker.registeredBy = row[7]
-            maker.createdAt = row[8]
-            maker.updatedAt = row[9]
+            maker.matchName = row[2]
+            maker.label = row[3]
+            maker.kind = row[4]
+            maker.matchStr = row[5]
+            maker.matchProductNumber = row[6]
+            maker.siteKind = row[7]
+            maker.replaceWords = row[8]
+            maker.pNumberGen = row[9]
+            maker.registeredBy = row[10]
+            maker.createdAt = row[11]
+            maker.updatedAt = row[12]
             makers.append(maker)
 
         self.conn.commit()
@@ -314,6 +407,18 @@ class DbMysql:
 
         self.cursor.execute(sql, (product_number, id))
         print("jav update id [" + str(id) + "]")
+
+        self.conn.commit()
+
+    def update_jav_checked_ok(self, is_parse2, makers_id, javData):
+
+        sql = 'UPDATE jav ' \
+                '  SET is_parse2 = %s ' \
+                '    , scraping.jav.makers_id = %s ' \
+                '  WHERE id = %s'
+
+        self.cursor.execute(sql, (is_parse2, makers_id, javData.id))
+        print("jav update id [" + str(javData.id) + "]")
 
         self.conn.commit()
 

@@ -1,7 +1,6 @@
 from db import mysql_control
 import os
 from data import site_data
-import glob
 import re
 import rarfile
 import shutil
@@ -31,7 +30,7 @@ class ImportRegisterBj:
 
         # self.is_check = True
         self.is_check = False
-        self.target_max = 10;
+        self.target_max = 30;
         # self.__set_files()
 
     def arrange_execute(self):
