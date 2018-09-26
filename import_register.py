@@ -166,7 +166,11 @@ class ImportRegister:
         if len(movie_kind) > 0:
             title = title.strip() + movie_kind
 
-        return title
+        match_maker_name = re.search(match_maker.matchName, title)
+        if match_maker_name:
+            title = title.replace(match_maker_name.group(), '')
+
+        return title.strip()
 
     def recover_p_number_register(self, jav, tool):
 
@@ -280,7 +284,10 @@ class ImportRegister:
 
             import_data.postDate = jav.postDate
             import_data.copy_text = jav.title
-            import_data.productNumber = jav.productNumber.upper()
+            if match_maker.name == 'SITE':
+                import_data.productNumber = jav.productNumber.lower()
+            else:
+                import_data.productNumber = jav.productNumber.upper()
             import_data.matchStr = match_maker.matchStr
             import_data.kind = match_maker.kind
             import_data.maker = match_maker.get_maker(jav.label)
