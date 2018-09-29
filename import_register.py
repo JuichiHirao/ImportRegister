@@ -43,9 +43,25 @@ class ImportRegister:
     def __get_target_files(self, jav):
 
         idx = 0
-        if jav.id == 5744:
+        if jav.id == 2013:
             idx = idx + 1
+
         files = []
+        if jav.downloadFiles and len(jav.downloadFiles.strip()) > 0:
+            download_files = jav.downloadFiles.split(' ')
+            if len(download_files) == 1:
+                pathname = os.path.join(self.register_path, download_files[0])
+                if os.path.isfile(pathname):
+                    files.append(download_files[0])
+            elif len(download_files) > 1:
+                for file in download_files:
+                    pathname = os.path.join(self.register_path, file)
+                    if os.path.isfile(pathname):
+                        files.append(file)
+
+        if len(files) > 0:
+            return files
+
         re_pattern1 = re.compile('.*' + jav.productNumber + '.*', re.IGNORECASE)
         find_filter = filter(lambda file: re_pattern1.match(file), self.files)
         find_list = list(find_filter)
@@ -166,7 +182,11 @@ class ImportRegister:
         if len(movie_kind) > 0:
             title = title.strip() + movie_kind
 
-        return title
+        match_maker_name = re.search(match_maker.matchName, title)
+        if match_maker_name:
+            title = title.replace(match_maker_name.group(), '')
+
+        return title.strip()
 
     def recover_p_number_register(self, jav, tool):
 
@@ -235,7 +255,7 @@ class ImportRegister:
                     break
 
             if not is_exist:
-                err_list.append('not exist thumbnail ' + str(jav.id) + '[' + jav.thumbnail + '] ' + jav.title)
+                err_list.append('not exist thumbnail ' + str(jav.id) + ' [' + jav.thumbnail + '] ' + jav.title)
                 continue
 
             pathname_p = os.path.join(self.store_path, jav.package)
@@ -272,7 +292,7 @@ class ImportRegister:
                 is_err = True
 
             if is_err_extract:
-                err_list.append('error extract ' + str(jav.id) + '  [' + match_maker.matchStr + ']  ' + jav.title)
+                err_list.append('error extract ' + str(jav.id) + '  [' + match_maker.matchStr + ']  ' + jav.title + str(files[0]))
                 is_err = True
 
             if is_err:
@@ -280,7 +300,10 @@ class ImportRegister:
 
             import_data.postDate = jav.postDate
             import_data.copy_text = jav.title
-            import_data.productNumber = jav.productNumber.upper()
+            if match_maker.name == 'SITE':
+                import_data.productNumber = jav.productNumber.lower()
+            else:
+                import_data.productNumber = jav.productNumber.upper()
             import_data.matchStr = match_maker.matchStr
             import_data.kind = match_maker.kind
             import_data.maker = match_maker.get_maker(jav.label)

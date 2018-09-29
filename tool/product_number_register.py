@@ -24,7 +24,7 @@ class ProductNumberRegister:
         is_nomatch = False
         match_maker = None
         # match = re.search('[0-9A-Za-z]*-[0-9A-Za-z]*', jav.title)
-        if jav.id == 316:
+        if jav.id == 2076:
             i = 0
 
         # jav.makerが存在する場合（ほぼAVRIP）
@@ -71,7 +71,7 @@ class ProductNumberRegister:
                     if len(jav.label) <= 0:
                         find_filter_label = filter(lambda maker: len(maker.label) == 0, find_list_label)
                     else:
-                        find_filter_label = filter(lambda maker: maker.label == jav.label, find_list_maker)
+                        find_filter_label = filter(lambda maker: maker.label == jav.label, find_list_label)
                     find_list_label = list(find_filter_label)
                     if len(find_list_label) == 1:
                         match_maker = find_list_label[0]
