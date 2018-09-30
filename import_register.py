@@ -29,7 +29,7 @@ class ImportRegister:
 
         self.makers = self.maker_dao.get_all()
 
-        self.p_number_tool = tool.ProductNumber()
+        self.p_number_tool = tool.p_number.ProductNumber()
 
         self.is_recover_check = True
         # self.is_recover_check = False

@@ -1,11 +1,10 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-from db import mysql_control
 import urllib.request
 import re
 import os
-from data import site_data
 from bs4 import BeautifulSoup
+from javcore import data
 
 
 class PackageImage:
@@ -23,7 +22,7 @@ class PackageImage:
 
     def get_url(self, id):
 
-        jav = site_data.JavData()
+        jav = data.JavData()
 
         opener=urllib.request.build_opener()
         opener.addheaders=[('User-Agent','Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1941.0 Safari/537.36')]
