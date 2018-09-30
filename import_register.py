@@ -1,12 +1,11 @@
-from db import mysql_control
 import os
-from data import site_data
 import glob
 import re
 import rarfile
 import shutil
-
-from tool import product_number_register
+from javcore import data
+from javcore import db
+from javcore import tool
 
 
 class ImportRegister:
@@ -24,8 +23,13 @@ class ImportRegister:
         self.store_path = "D:\DATA\jav-save"
         self.register_path = "D:\DATA\Downloads"
 
-        self.db = mysql_control.DbMysql()
-        self.makers = self.db.get_movie_maker()
+        self.jav_dao = db.jav.JavDao()
+        self.maker_dao = db.maker.MakerDao()
+        self.import_dao = db.import_dao.ImportDao()
+
+        self.makers = self.maker_dao.get_all()
+
+        self.p_number_tool = tool.ProductNumber()
 
         self.is_recover_check = True
         # self.is_recover_check = False
@@ -188,23 +192,22 @@ class ImportRegister:
 
         return title.strip()
 
-    def recover_p_number_register(self, jav, tool):
+    def recover_p_number_register(self, jav, tool: tool.p_number.ProductNumber):
 
-        jav.productNumber, seller, sell_date, match_maker, ng_reason = tool.parse2(jav, self.is_recover_check)
+        jav.productNumber, seller, sell_date, match_maker, ng_reason = tool.parse_and_fc2(jav, self.is_recover_check)
         print(jav.productNumber + ' title [' + jav.title + ']')
         if match_maker is None:
             print('no match maker '  ' title [' + jav.title + ']')
 
         if not self.is_recover_check:
-            self.db.update_jav_product_number(jav.id, jav.productNumber)
+            self.jav_dao.update_product_number(jav.id, jav.productNumber)
 
     def arrange_execute(self):
 
-        javs = self.db.get_javs()
+        javs = self.jav_dao.get_all()
 
         err_list = []
         target_idx = 1
-        p_number_tool = product_number_register.ProductNumberRegister()
         for idx, jav in enumerate(javs):
 
             is_err = False
@@ -233,7 +236,7 @@ class ImportRegister:
                 else:
                     print('-x ' + str(jav.id) + ' errno[' + str(jav.isParse2) + '] First error no ' + jav.title)
 
-                self.recover_p_number_register(jav, p_number_tool)
+                self.recover_p_number_register(jav, self.p_number_tool)
 
                 # break
 
@@ -278,7 +281,7 @@ class ImportRegister:
 
             target_idx = target_idx + 1
 
-            import_data = site_data.ImportData()
+            import_data = data.ImportData()
             import_data.title = self.__get_title_from_copytext(jav.title, jav.productNumber, match_maker)
             print('[' + str(jav.id) + '] [' + import_data.title + ']  ' + jav.title)
 
@@ -327,8 +330,8 @@ class ImportRegister:
                 shutil.copy2(pathname_th, dest_th)
             print('  ' + dest_th + " <- " + pathname_th)
             if not self.is_check:
-                self.db.export_import(import_data)
-                self.db.update_jav_is_selection(jav.id, 9)
+                self.import_dao.export_import(import_data)
+                self.jav_dao.update_is_selection(jav.id, 9)
 
         for err in err_list:
             print(err)
