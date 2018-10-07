@@ -1,12 +1,12 @@
-from db import mysql_control
 import os
-from data import site_data
 import glob
 import re
 import rarfile
 import shutil
-
-from tool import product_number_register
+from datetime import datetime
+from javcore import data
+from javcore import db
+from javcore import tool
 
 
 class ImportRegister:
@@ -24,8 +24,13 @@ class ImportRegister:
         self.store_path = "D:\DATA\jav-save"
         self.register_path = "D:\DATA\Downloads"
 
-        self.db = mysql_control.DbMysql()
-        self.makers = self.db.get_movie_maker()
+        self.jav_dao = db.jav.JavDao()
+        self.maker_dao = db.maker.MakerDao()
+        self.import_dao = db.import_dao.ImportDao()
+
+        self.makers = self.maker_dao.get_all()
+
+        self.p_number_tool = tool.p_number.ProductNumber()
 
         self.is_recover_check = True
         # self.is_recover_check = False
@@ -188,23 +193,65 @@ class ImportRegister:
 
         return title.strip()
 
-    def recover_p_number_register(self, jav, tool):
+    def __auto_maker_register(self, jav):
 
-        jav.productNumber, seller, sell_date, match_maker, ng_reason = tool.parse2(jav, self.is_recover_check)
+        m_p = re.search('[A-Z0-9]{2,5}-[A-Z0-9]{2,4}', jav.title, re.IGNORECASE)
+        match_str = ''
+        if m_p:
+            p_number = m_p.group()
+            match_str = p_number.split('-')[0]
+        else:
+            print('[' + str(jav.id) + '] 対象のmatch_strが存在しません [A-Z0-9]{3,5}-[A-Z0-9]{3,4}の正規表現と一致しません' + jav.title)
+            exit(-1)
+
+        if len(match_str) > 0 and self.maker_dao.is_exist(match_str.upper()):
+            print('[' + str(jav.id) + '] 発見!! [' + match_str + ']')
+            return False
+
+        maker = data.MakerData()
+
+        maker.name = jav.maker.replace('/', '／')
+        maker.matchName = jav.maker
+        if jav.maker == jav.label:
+            pass
+        else:
+            maker.label = jav.label
+        maker.kind = 1
+        maker.matchStr = match_str.upper()
+        maker.registeredBy = 'AUTO ' + datetime.now().strftime('%Y-%m-%d')
+
+        print('[' + str(jav.id) + ']' + jav.title)
+        maker.print()
+
+        if not self.is_recover_check:
+            self.maker_dao.export(maker)
+        return True
+
+    def recover_p_number_register(self, jav, tool: tool.p_number.ProductNumber):
+
+        jav.productNumber, seller, sell_date, match_maker, ng_reason = tool.parse_and_fc2(jav, self.is_recover_check)
         print(jav.productNumber + ' title [' + jav.title + ']')
         if match_maker is None:
             print('no match maker '  ' title [' + jav.title + ']')
 
+        if jav.isSite == 0 and len(seller) > 0:
+            sell_date = datetime.strptime(sell_date, '%Y/%m/%d')
+            if not self.is_check:
+                self.jav_dao.update_site_info(seller, sell_date, jav.id)
+            print('update [' + str(jav.id) + '] label [' + seller + ']  sell_date [' + str(sell_date) + '] ' + str(self.is_check))
+
         if not self.is_recover_check:
-            self.db.update_jav_product_number(jav.id, jav.productNumber)
+            self.jav_dao.update_product_number(jav.id, jav.productNumber)
+
+        if ng_reason < 0:
+            return ng_reason
 
     def arrange_execute(self):
 
-        javs = self.db.get_javs()
+        javs = self.jav_dao.get_all()
 
         err_list = []
         target_idx = 1
-        p_number_tool = product_number_register.ProductNumberRegister()
         for idx, jav in enumerate(javs):
 
             is_err = False
@@ -216,28 +263,51 @@ class ImportRegister:
                 jav.actress = ''
 
             if jav.isParse2 < 0:
+                error_message = ''
                 if jav.isParse2 == -1:
-                    print('-1 ' + str(jav.id) + ' メーカー完全一致だが、タイトル内に製品番号が一致しない [' + jav.maker + ']' + jav.title)
+                    error_message = '-1 ' + str(jav.id) + ' メーカー完全一致だが、タイトル内に製品番号が一致しない [' + jav.maker + ']' + jav.title
+                    print(error_message)
                 elif jav.isParse2 == -2:
-                    print('-2 ' + str(jav.id) + ' メーカーと、タイトル内に製品番号複数一致 [' + jav.maker + ']' + jav.title)
+                    error_message = '-2 ' + str(jav.id) + ' メーカーと、タイトル内に製品番号複数一致 [' + jav.maker + ']' + jav.title
+                    print(error_message)
                 elif jav.isParse2 == -3:
-                    print('-3 ' + str(jav.id) + ' メーカには複数一致、製品番号に一致しない ID [' + str(jav.id) + '] jav [' + jav.maker + ':' + jav.label + ']' + jav.title)
+                    error_message = '-3 ' + str(jav.id) + ' メーカには複数一致、製品番号に一致しない ID [' + str(jav.id) + '] jav ' + jav.productNumber + '[' + jav.maker + ':' + jav.label + ']' + jav.title
+                    print(error_message)
                 elif jav.isParse2 == -4:
-                    print('-4 ' + str(jav.id) + ' maker exist no match, not register [' + jav.maker + ':' + jav.label + '] ' + jav.title)
+                    error_message = '-4 ' + str(jav.id) + ' maker exist no match, not register [' + jav.maker + ':' + jav.label + '] ' + jav.title
+                    print(error_message)
                 elif jav.isParse2 == -5:
-                    print('-5 ' + str(jav.id) + 'メーカー[' + jav.maker + ':' + jav.label + '] に一致したが、タイトル内にmatchStrの文字列がない ' + jav.title)
+                    error_message = '-5 ' + str(jav.id) + 'メーカー[' + jav.maker + ':' + jav.label + '] に一致したが、タイトル内にmatchStrの文字列がない ' + jav.title
+                    print(error_message)
                 elif jav.isParse2 == -6:
-                    print('-6 ' + str(jav.id) + ' many match ' + jav.title)
+                    error_message = '-6 ' + str(jav.id) + ' many match ' + jav.title
+                    print(error_message)
                 elif jav.isParse2 == -7:
-                    print('-7 ' + str(jav.id) + ' no match ' + jav.title)
+                    error_message = '-7 ' + str(jav.id) + ' no match ' + jav.title
+                    print(error_message)
                 else:
-                    print('-x ' + str(jav.id) + ' errno[' + str(jav.isParse2) + '] First error no ' + jav.title)
+                    error_message = '-x ' + str(jav.id) + ' errno[' + str(jav.isParse2) + '] First error no ' + jav.title
+                    print(error_message)
 
-                self.recover_p_number_register(jav, p_number_tool)
+                if jav.maker == 'SODクリエイト' and jav.label == 'ミラー号':
+                    jav.label = 'マジックミラー号'
 
+                ng_reason = self.recover_p_number_register(jav, self.p_number_tool)
+
+                if ng_reason is not None and ng_reason < 0:
+                    err_list.append('リカバリー失敗 ' + error_message)
+
+                    if ng_reason == -3 or ng_reason == -4:
+                        result = self.__auto_maker_register(jav)
+                        if result:
+                            err_list.append('  自動登録OK ' + jav.maker + ':' + jav.label)
+                        else:
+                            err_list.append('  自動登録NG ' + jav.maker + ':' + jav.label)
                 # break
 
             if jav.makersId <= 0:
+                print('makersId is 0 [' + str(jav.id) + '] ' + jav.title)
+                self.recover_p_number_register(jav, self.p_number_tool)
                 continue
 
             if jav.productNumber is None or len(jav.productNumber) <= 0:
@@ -278,7 +348,7 @@ class ImportRegister:
 
             target_idx = target_idx + 1
 
-            import_data = site_data.ImportData()
+            import_data = data.ImportData()
             import_data.title = self.__get_title_from_copytext(jav.title, jav.productNumber, match_maker)
             print('[' + str(jav.id) + '] [' + import_data.title + ']  ' + jav.title)
 
@@ -327,8 +397,8 @@ class ImportRegister:
                 shutil.copy2(pathname_th, dest_th)
             print('  ' + dest_th + " <- " + pathname_th)
             if not self.is_check:
-                self.db.export_import(import_data)
-                self.db.update_jav_is_selection(jav.id, 9)
+                self.import_dao.export_import(import_data)
+                self.jav_dao.update_is_selection(jav.id, 9)
 
         for err in err_list:
             print(err)
