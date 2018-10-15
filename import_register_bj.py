@@ -1,9 +1,11 @@
+import glob
 import os
 import re
 import rarfile
 import shutil
 from javcore import data
 from javcore import db
+from send2trash import send2trash
 
 
 class ImportRegisterBj:
@@ -91,6 +93,12 @@ class ImportRegisterBj:
                 target_name = base_name + ' ' + bj.title
             print('  ' + target_name)
 
+            dest_register_path = ''
+            if 'VIDEOS' in bj.postedIn:
+                dest_register_path = os.path.abspath(os.path.join(self.register_path, os.pardir))
+            else:
+                dest_register_path = self.register_path
+
             idx = 1
             if len(jpeg_links) == 1:
                 idx = 0
@@ -99,7 +107,7 @@ class ImportRegisterBj:
                 if idx > 0:
                     suffix = '_' + str(idx)
 
-                dest_pathname = os.path.join(self.register_path, target_name + suffix + '.jpg')
+                dest_pathname = os.path.join(dest_register_path, target_name + suffix + '.jpg')
                 if not self.is_check:
                     shutil.copy2(jpeg, dest_pathname)
                 else:
@@ -120,6 +128,39 @@ class ImportRegisterBj:
             import_data.tag = tag
             import_data.maker = bj.postedIn
             import_data.size = size
+
+            if 'VIDEOS' in bj.postedIn:
+                video_dir_pathname = os.path.join(self.register_path, base_name)
+                # rar_pathname
+                if os.path.exists(video_dir_pathname):
+                    files = glob.glob(video_dir_pathname + '\*')
+                    re_movie = re.compile(self.movie_extension, re.IGNORECASE)
+                    mov_files = []
+                    for data in files:
+                        if re_movie.search(data):
+                            mov_files.append(data)
+                    if len(mov_files) >= 1:
+                        if len(mov_files) == 1:
+                            extension = os.path.splitext(os.path.basename(mov_files[0]))[1]
+                            movie_dest_pathname = os.path.join(dest_register_path, base_name + extension.lower())
+
+                            if not self.is_check:
+                                shutil.copy2(mov_files[0], movie_dest_pathname)
+                            print('      ' + movie_dest_pathname + ' <-- ' + mov_files[0])
+                        else:
+                            for movie_idx, mov_file in enumerate(mov_files):
+                                extension = os.path.splitext(os.path.basename(mov_file))[1]
+                                movie_dest_pathname = os.path.join(dest_register_path, base_name + '_' + str(movie_idx+1) + extension.lower())
+                                if not self.is_check:
+                                    shutil.copy2(mov_file, movie_dest_pathname)
+                                print('      ' + movie_dest_pathname + ' <-- ' + mov_file)
+
+                    if not self.is_check:
+                        send2trash(video_dir_pathname)
+                        send2trash(rar_pathname)
+
+                    if 'UNCENSORED' in bj.title:
+                        import_data.tag = 'UNCENSORED'
 
             if not self.is_check:
                 self.import_dao.export_import(import_data)

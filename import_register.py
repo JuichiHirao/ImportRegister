@@ -37,7 +37,7 @@ class ImportRegister:
         self.is_check = True
         # self.is_check = False
 
-        self.target_max = 20
+        self.target_max = 40
         self.__set_files()
 
     def __set_files(self):
@@ -340,7 +340,7 @@ class ImportRegister:
             if len(find_list) == 1:
                 match_maker = find_list[0]
             else:
-                err_list.append('jav.makersId [' + jav.makersId + '] がmakersに存在しません ' + jav.title)
+                err_list.append('jav.makersId [' + str(jav.makersId) + '] がmakersに存在しません ' + jav.title)
                 continue
 
             if target_idx < 0 or target_idx > self.target_max:
