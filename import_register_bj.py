@@ -1,9 +1,9 @@
-from db import mysql_control
 import os
-from data import site_data
 import re
 import rarfile
 import shutil
+from javcore import data
+from javcore import db
 
 
 class ImportRegisterBj:
@@ -26,16 +26,18 @@ class ImportRegisterBj:
         if not os.path.exists(self.store_path):
             print('not exist path store_path [' + self.store_path + ']')
             exit(-1)
-        self.db = mysql_control.DbMysql()
 
-        # self.is_check = True
-        self.is_check = False
+        self.import_dao = db.import_dao.ImportDao()
+        self.bj_dao = db.bj.BjDao()
+
+        self.is_check = True
+        # self.is_check = False
         self.target_max = 30;
         # self.__set_files()
 
     def arrange_execute(self):
 
-        bjs = self.db.get_bj()
+        bjs = self.bj_dao.get_all()
 
         err_list = []
         target_idx = 1
@@ -105,7 +107,7 @@ class ImportRegisterBj:
 
                 idx = idx + 1
 
-            import_data = site_data.ImportData()
+            import_data = data.ImportData()
             import_data.title = bj.title
             import_data.postDate = bj.postDate
             import_data.copy_text = target_name
@@ -120,8 +122,8 @@ class ImportRegisterBj:
             import_data.size = size
 
             if not self.is_check:
-                self.db.export_import(import_data)
-                self.db.update_bj_is_selection(bj.id, 9)
+                self.import_dao.export_import(import_data)
+                self.bj_dao.update_is_selection(bj.id, 9)
 
             if target_idx > self.target_max:
                 break
