@@ -40,9 +40,10 @@ class PackageImage:
             print('p_number is None')
             return
 
-        print('  p_number [' + jav.productNumber + ']')
         edit_p = '%' + jav.productNumber + '%'
-        jav2s = self.jav2_dao.get_where_agreement_param('WHERE title like %s', (edit_p, ))
+        print('  p_number [' + edit_p + ']')
+        jav2s = self.jav2_dao.get_where_agreement('WHERE id = 12230 ')
+        # jav2s = self.jav2_dao.get_where_agreement_param('WHERE title like %s', (edit_p, ))
 
         for jav2 in jav2s:
 
@@ -67,4 +68,4 @@ class PackageImage:
 if __name__ == '__main__':
     p_image = PackageImage()
     # jav2.get_url('tat_035')
-    p_image.get_url(5511)
+    p_image.get_url(5515)

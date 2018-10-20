@@ -236,7 +236,7 @@ class ImportRegister:
 
         if jav.isSite == 0 and len(seller) > 0:
             sell_date = datetime.strptime(sell_date, '%Y/%m/%d')
-            if not self.is_check:
+            if not self.is_recover_check:
                 self.jav_dao.update_site_info(seller, sell_date, jav.id)
             print('update [' + str(jav.id) + '] label [' + seller + ']  sell_date [' + str(sell_date) + '] ' + str(self.is_check))
 

@@ -50,3 +50,6 @@ INSERT INTO maker (name, match_name, label, kind, match_str, match_product_numbe
   VALUES ('MGS', 'MGS', '黒船', 1, '302URF', '', 0, null, null, 0, 'MANUAL2018-10-08');
 
 SELECT COUNT(*) FROM jav WHERE is_selection = 1;
+
+INSERT INTO maker (name, match_name, label, kind, match_str, match_product_number, site_kind, replace_words, p_number_gen, deleted, registered_by)
+  VALUES ('dl.getchu.com', 'dl.getchu.com', '', 1, 'GETCHU', 'GETCHU-[0-9]{6}', 0, null, null, 0, 'MANUAL2018-10-20');

@@ -136,9 +136,9 @@ class ImportRegisterBj:
                     files = glob.glob(video_dir_pathname + '\*')
                     re_movie = re.compile(self.movie_extension, re.IGNORECASE)
                     mov_files = []
-                    for data in files:
-                        if re_movie.search(data):
-                            mov_files.append(data)
+                    for file_data in files:
+                        if re_movie.search(file_data):
+                            mov_files.append(file_data)
                     if len(mov_files) >= 1:
                         if len(mov_files) == 1:
                             extension = os.path.splitext(os.path.basename(mov_files[0]))[1]
