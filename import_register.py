@@ -7,6 +7,7 @@ from datetime import datetime
 from javcore import data
 from javcore import db
 from javcore import tool
+from javcore import common
 
 
 class ImportRegister:
@@ -31,6 +32,7 @@ class ImportRegister:
         self.makers = self.maker_dao.get_all()
 
         self.p_number_tool = tool.p_number.ProductNumber()
+        self.copy_text = common.CopyText(True)
 
         self.is_recover_check = True
         # self.is_recover_check = False
@@ -156,43 +158,6 @@ class ImportRegister:
 
         return result_tuple
 
-    def __get_title_from_copytext(self, copy_text, product_number, match_maker):
-
-        hankaku = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
-        zenkaku = ['１', '２', '３', '４', '５', '６', '７', '８', '９', '０']
-        title = ''
-        movie_kind = ''
-
-        if match_maker.replaceWords is not None and len(match_maker.replaceWords) > 0:
-            words = match_maker.replaceWords.split(' ')
-            for word in words:
-                copy_text = re.sub(word, '', copy_text)
-            '''
-            if ' ' in match_maker.replaceWords:
-                words = ' '.split(match_maker.replaceWords)
-                for word in ' '.split(match_maker.replaceWords):
-                    copy_text = re.sub(word, '', copy_text)
-            else:
-                copy_text = re.sub(match_maker.replaceWords, '', copy_text)
-            '''
-
-        match_search = re.search('[\[]*FHD[\]]*', copy_text)
-        if match_search:
-            title = copy_text.replace(match_search.group(), '').replace(product_number.upper(), '', )\
-                .replace(product_number.lower(), '', )
-            movie_kind = ' FHD'
-        else:
-            title = copy_text.replace(product_number, '').strip()
-
-        if len(movie_kind) > 0:
-            title = title.strip() + movie_kind
-
-        match_maker_name = re.search(match_maker.matchName, title)
-        if match_maker_name:
-            title = title.replace(match_maker_name.group(), '')
-
-        return title.strip()
-
     def __auto_maker_register(self, jav):
 
         m_p = re.search('[A-Z0-9]{2,5}-[A-Z0-9]{2,4}', jav.title, re.IGNORECASE)
@@ -261,6 +226,11 @@ class ImportRegister:
 
             if jav.actress == '—-':
                 jav.actress = ''
+
+            if target_idx < 0 or target_idx > self.target_max:
+                break
+
+            target_idx = target_idx + 1
 
             if jav.isParse2 < 0:
                 error_message = ''
@@ -343,13 +313,8 @@ class ImportRegister:
                 err_list.append('jav.makersId [' + str(jav.makersId) + '] がmakersに存在しません ' + jav.title)
                 continue
 
-            if target_idx < 0 or target_idx > self.target_max:
-                break
-
-            target_idx = target_idx + 1
-
             import_data = data.ImportData()
-            import_data.title = self.__get_title_from_copytext(jav.title, jav.productNumber, match_maker)
+            import_data.title = self.copy_text.get_title(jav.title, jav.productNumber, match_maker)
             print('[' + str(jav.id) + '] [' + import_data.title + ']  ' + jav.title)
 
             movie_size, import_data.isSplit, import_data.isRar, is_err_extract = self.__parse_files(jav, files)
@@ -360,11 +325,9 @@ class ImportRegister:
                 else:
                     err_list.append('movie not found ' + str(jav.id) + '  [' + match_maker.matchStr + ']  ' + jav.title)
                 is_err = True
-
             if is_err_extract:
                 err_list.append('error extract ' + str(jav.id) + '  [' + match_maker.matchStr + ']  ' + jav.title + str(files[0]))
                 is_err = True
-
             if is_err:
                 continue
 
