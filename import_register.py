@@ -342,9 +342,10 @@ class ImportRegister:
             import_data.kind = match_maker.kind
             import_data.maker = match_maker.get_maker(jav.label)
             import_data.sellDate = jav.sellDate
-            # import_data.actress = jav.actress
             import_data.tag = jav.actress
             import_data.isNameOnly = True
+            import_data.package = jav.package
+            import_data.thumbnail = jav.thumbnail
             import_data.url = jav.url
             import_data.rating = jav.rating
             import_data.size = movie_size

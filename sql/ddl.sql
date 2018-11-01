@@ -58,10 +58,18 @@ SELECT * FROM jav WHERE id in (6767, 6768, 6769, 6867);
 UPDATE jav SET maker = 'SODクリエイト', label = 'SOD Star' WHERE id in (6767, 6768, 6769, 6867);
 
 SELECT * FROM jav WHERE id in (3510);
-lk0
+
 SELECT * FROM jav WHERE id in (6927, 6925, 6926, 3510);
 
 INSERT INTO maker (name, match_name, label, kind, match_str, match_product_number, site_kind, replace_words, p_number_gen, deleted, registered_by)
   VALUES ('マーキュリー', '	MERCURY（マーキュリー）', '', 1, 'NINE', '', 0, null, null, 0, 'MANUAL2018-10-29');
 INSERT INTO maker (name, match_name, label, kind, match_str, match_product_number, site_kind, replace_words, p_number_gen, deleted, registered_by)
   VALUES ('プラネットプラス', '	', '', 1, 'SUSS', '', 0, null, null, 0, 'MANUAL2018-11-01');
+
+ALTER TABLE import CHANGE jav_package package varchar(255);
+ALTER TABLE import CHANGE jav_thumbnail thumbnail varchar(255);
+ALTER TABLE import DROP jav_sell_date;
+ALTER TABLE import DROP jav_actress;
+ALTER TABLE import DROP jav_maker;
+ALTER TABLE import DROP jav_label;
+ALTER TABLE jav ADD detail TEXT AFTER makers_id;
