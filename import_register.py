@@ -40,6 +40,7 @@ class ImportRegister:
         # self.is_check = False
 
         self.target_max = 40
+        # self.target_max = 4
         self.__set_files()
 
     def __set_files(self):
@@ -267,7 +268,7 @@ class ImportRegister:
                 if ng_reason is not None and ng_reason < 0:
                     err_list.append('リカバリー失敗 ' + error_message)
 
-                    if ng_reason == -3 or ng_reason == -4:
+                    if ng_reason == -3 or ng_reason == -4 or ng_reason == -5:
                         result = self.__auto_maker_register(jav)
                         if result:
                             err_list.append('  自動登録OK ' + jav.maker + ':' + jav.label)
@@ -350,12 +351,20 @@ class ImportRegister:
 
             filename, ext = os.path.splitext(pathname_p)
             dest_p = os.path.join(self.register_path, import_data.productNumber + ext)
+            if os.path.isfile(dest_p):
+                dest_p_org = dest_p
+                dest_p = os.path.join(self.register_path, str(jav.id) + '-' + match_maker.matchStr + '_' + import_data.productNumber + ext)
+                err_list.append('パッケージファイルが存在 [' + dest_p + '] に変更 ' + dest_p_org)
             if not self.is_check:
                 shutil.copy2(pathname_p, dest_p)
             print('  ' + dest_p + " <- " + pathname_p)
 
             filename, ext = os.path.splitext(pathname_th)
             dest_th = os.path.join(self.register_path, import_data.productNumber + 'big' + ext)
+            if os.path.isfile(dest_th):
+                dest_th_org = dest_th
+                dest_th = os.path.join(self.register_path, str(jav.id) + '-' + match_maker.matchStr + '_' + import_data.productNumber + 'big' + ext)
+                err_list.append('サムネイルファイルが存在 [' + dest_th + '] に変更 ' + dest_th_org)
             if not self.is_check:
                 shutil.copy2(pathname_th, dest_th)
             print('  ' + dest_th + " <- " + pathname_th)

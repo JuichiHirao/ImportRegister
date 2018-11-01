@@ -53,3 +53,15 @@ SELECT COUNT(*) FROM jav WHERE is_selection = 1;
 
 INSERT INTO maker (name, match_name, label, kind, match_str, match_product_number, site_kind, replace_words, p_number_gen, deleted, registered_by)
   VALUES ('dl.getchu.com', 'dl.getchu.com', '', 1, 'GETCHU', 'GETCHU-[0-9]{6}', 0, null, null, 0, 'MANUAL2018-10-20');
+
+SELECT * FROM jav WHERE id in (6767, 6768, 6769, 6867);
+UPDATE jav SET maker = 'SODクリエイト', label = 'SOD Star' WHERE id in (6767, 6768, 6769, 6867);
+
+SELECT * FROM jav WHERE id in (3510);
+lk0
+SELECT * FROM jav WHERE id in (6927, 6925, 6926, 3510);
+
+INSERT INTO maker (name, match_name, label, kind, match_str, match_product_number, site_kind, replace_words, p_number_gen, deleted, registered_by)
+  VALUES ('マーキュリー', '	MERCURY（マーキュリー）', '', 1, 'NINE', '', 0, null, null, 0, 'MANUAL2018-10-29');
+INSERT INTO maker (name, match_name, label, kind, match_str, match_product_number, site_kind, replace_words, p_number_gen, deleted, registered_by)
+  VALUES ('プラネットプラス', '	', '', 1, 'SUSS', '', 0, null, null, 0, 'MANUAL2018-11-01');
