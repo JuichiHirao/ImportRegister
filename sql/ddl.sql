@@ -73,3 +73,15 @@ ALTER TABLE import DROP jav_actress;
 ALTER TABLE import DROP jav_maker;
 ALTER TABLE import DROP jav_label;
 ALTER TABLE jav ADD detail TEXT AFTER makers_id;
+
+ALTER TABLE import ADD download_files TEXT AFTER makers_id;
+
+ALTER TABLE import ADD download_files TEXT AFTER thumbnail;
+
+INSERT INTO scraping.maker (name, match_name, label, kind, match_str, match_product_number, site_kind, replace_words, p_number_gen, deleted, registered_by)
+  VALUES ('PreStige', 'プレステージ', 'KANBi', 1, '336KNB', '', 0, '', 0, 0, 'MANUAL 2018-11-10');
+
+INSERT INTO maker (name, match_name, label, kind, match_str, match_product_number, site_kind, replace_words, p_number_gen, deleted, registered_by)
+  VALUES ('SITE', 'HimeMix', 'HimeMix', 1, 'HimeMix', '[0-9]{4}', 0, null, null, 0, 'MANUAL 2018-11-10');
+INSERT INTO scraping.maker (name, match_name, label, kind, match_str, match_product_number, site_kind, replace_words, p_number_gen, deleted, registered_by)
+  VALUES ('AROUND', 'AROUND', '', 1, 'ARSO', '', 0, null, null, 0, 'MANUAL 2018-11-10');

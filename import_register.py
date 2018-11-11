@@ -346,10 +346,12 @@ class ImportRegister:
             import_data.isNameOnly = True
             import_data.package = jav.package
             import_data.thumbnail = jav.thumbnail
+            import_data.downloadFiles = jav.downloadFiles
             import_data.url = jav.url
             import_data.rating = jav.rating
             import_data.size = movie_size
 
+            '''
             filename, ext = os.path.splitext(pathname_p)
             dest_p = os.path.join(self.register_path, import_data.productNumber + ext)
             if os.path.isfile(dest_p):
@@ -369,6 +371,7 @@ class ImportRegister:
             if not self.is_check:
                 shutil.copy2(pathname_th, dest_th)
             print('  ' + dest_th + " <- " + pathname_th)
+            '''
             if not self.is_check:
                 self.import_dao.export_import(import_data)
                 self.jav_dao.update_is_selection(jav.id, 9)
