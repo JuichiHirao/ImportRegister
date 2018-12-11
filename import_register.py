@@ -8,6 +8,7 @@ from javcore import data
 from javcore import db
 from javcore import tool
 from javcore import common
+from javcore import site
 
 
 class ImportRegister:
@@ -29,17 +30,19 @@ class ImportRegister:
         self.maker_dao = db.maker.MakerDao()
         self.import_dao = db.import_dao.ImportDao()
 
+        self.wiki = site.wiki.SougouWiki()
+
         self.makers = self.maker_dao.get_all()
 
         self.p_number_tool = tool.p_number.ProductNumber()
-        self.copy_text = common.CopyText(True)
+        self.copy_text = common.CopyText(False)
 
         self.is_recover_check = True
         # self.is_recover_check = False
         self.is_check = True
         # self.is_check = False
 
-        self.target_max = 40
+        self.target_max = 60
         # self.target_max = 4
         self.__set_files()
 
@@ -163,16 +166,19 @@ class ImportRegister:
 
         m_p = re.search('[A-Z0-9]{2,5}-[A-Z0-9]{2,4}', jav.title, re.IGNORECASE)
         match_str = ''
+        err_msg = ''
         if m_p:
             p_number = m_p.group()
             match_str = p_number.split('-')[0]
         else:
-            print('[' + str(jav.id) + '] 対象のmatch_strが存在しません [A-Z0-9]{3,5}-[A-Z0-9]{3,4}の正規表現と一致しません' + jav.title)
-            exit(-1)
+            err_msg = '[' + str(jav.id)\
+                      + '] 対象のmatch_strが存在しません [A-Z0-9]{3,5}-[A-Z0-9]{3,4}の正規表現と一致しません'\
+                      + jav.title
+            return False, err_msg
 
         if len(match_str) > 0 and self.maker_dao.is_exist(match_str.upper()):
-            print('[' + str(jav.id) + '] 発見!! [' + match_str + ']')
-            return False
+            err_msg = '[' + str(jav.id) + '] 発見!! [' + match_str + ']'
+            return False, err_msg
 
         maker = data.MakerData()
 
@@ -191,7 +197,7 @@ class ImportRegister:
 
         if not self.is_recover_check:
             self.maker_dao.export(maker)
-        return True
+        return True, ''
 
     def recover_p_number_register(self, jav, tool: tool.p_number.ProductNumber):
 
@@ -266,14 +272,33 @@ class ImportRegister:
                 ng_reason = self.recover_p_number_register(jav, self.p_number_tool)
 
                 if ng_reason is not None and ng_reason < 0:
+
                     err_list.append('リカバリー失敗 ' + error_message)
 
+                    find_maker_name = filter(lambda maker: maker.name == jav.maker, self.makers)
+                    find_maker_list = list(find_maker_name)
+
+                    if len(find_maker_list):
+                        err_list.append('  [' + jav.maker + '] ')
+                        for one_maker in find_maker_list:
+                            err_list.append('    [' + one_maker.matchStr + '] ' + jav.label)
+
+                    '''
+                    find_maker_str = filter(lambda maker: maker.name == jav.maker, self.makers)
+                    find_maker_list = list(find_maker_str)
+
+                    if len(find_maker_list):
+                        err_list.append('  [' + jav.maker + '] ')
+                        for one_maker in find_maker_list:
+                            err_list.append('    [' + one_maker.matchStr + '] ' + jav.label)
+                    '''
+
                     if ng_reason == -3 or ng_reason == -4 or ng_reason == -5:
-                        result = self.__auto_maker_register(jav)
+                        result, err_msg = self.__auto_maker_register(jav)
                         if result:
                             err_list.append('  自動登録OK ' + jav.maker + ':' + jav.label)
                         else:
-                            err_list.append('  自動登録NG ' + jav.maker + ':' + jav.label)
+                            err_list.append('  自動登録NG ' + err_msg)
                 # break
 
             if jav.makersId <= 0:
@@ -350,6 +375,7 @@ class ImportRegister:
             import_data.url = jav.url
             import_data.rating = jav.rating
             import_data.size = movie_size
+            import_data.searchResult = self.wiki.search(import_data.productNumber)
 
             '''
             filename, ext = os.path.splitext(pathname_p)

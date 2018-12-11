@@ -85,3 +85,37 @@ INSERT INTO maker (name, match_name, label, kind, match_str, match_product_numbe
   VALUES ('SITE', 'HimeMix', 'HimeMix', 1, 'HimeMix', '[0-9]{4}', 0, null, null, 0, 'MANUAL 2018-11-10');
 INSERT INTO scraping.maker (name, match_name, label, kind, match_str, match_product_number, site_kind, replace_words, p_number_gen, deleted, registered_by)
   VALUES ('AROUND', 'AROUND', '', 1, 'ARSO', '', 0, null, null, 0, 'MANUAL 2018-11-10');
+INSERT INTO scraping.maker (name, match_name, label, kind, match_str, match_product_number, site_kind, replace_words, p_number_gen, deleted, registered_by)
+  VALUES ('MGS', 'ゲリラ', '', 1, '302GEGR', '', 0, null, null, 0, 'MANUAL 2018-11-20');
+
+UPDATE jav SET maker = 'ホットエンターテイメント', label = '人妻' WHERE id in (9805,9804,9803,9802,9798)
+UPDATE jav SET maker = 'ブリット', label = '悪戯' WHERE id in (9807)
+UPDATE jav SET sell_date = '2018-10-10' WHERE id in (9805,9804,9803,9802,9798,9807)
+
+
+SELECT * FROM jav WHERE title like '%sdmu%' ORDER BY post_date DESC;
+SELECT * FROM jav WHERE title like '%star%' ORDER BY post_date DESC;
+UPDATE jav, (SELECT maker as maker_o, label as label_o FROM jav WHERE id = 10922) as tmp
+  SET jav.maker = tmp.maker_o, jav.label = tmp.label_o
+  WHERE jav.id = 9844;
+
+SELECT * FROM jav WHERE title like '%gs-18%' ORDER BY post_date DESC;
+UPDATE jav, (SELECT maker as maker_o, label as label_o FROM jav WHERE id = 9125) as tmp
+  SET jav.maker = tmp.maker_o, jav.label = tmp.label_o
+  WHERE jav.id = 10038;
+-- update table_001,( select max(col_01) as col_01_max from table_001 )  set col_01=col_01+1 where col_01 = col_01_max;
+
+SELECT * FROM maker WHERE match_str = 'GIGL' OR name like 'ハイカラ%';
+SELECT * FROM maker WHERE match_str = 'HARU';
+SELECT * FROM maker WHERE match_str = 'CWM';
+SELECT * FROM jav WHERE id = 11290;
+
+INSERT INTO maker (name, match_name, label, kind, match_str, match_product_number, site_kind, replace_words, p_number_gen, deleted, registered_by)
+  VALUES ('PreStige', 'PreStige', 'FULLSAIL BEST', 1, 'FSB', '', 0, null, null, 0, 'MANUAL 2018-11-30');
+
+SELECT * FROM jav WHERE id = 10067;
+INSERT INTO maker (name, match_name, label, kind, match_str, match_product_number, site_kind, p_number_gen, replace_words, registered_by)
+  VALUES ('HEY動画', 'HEY動画', 'おやじのハメ撮り', 3, '(4191|おやじのハメ撮り)', 'PPV[0-9]{3}', 0, 1, 'PPV', 'MANUAL 2018-12-02');
+
+SELECT * FROM maker WHERE created_at >= '2018-12-11';
+SELECT * FROM maker WHERE name like '%TOKYO%';
