@@ -117,5 +117,30 @@ SELECT * FROM jav WHERE id = 10067;
 INSERT INTO maker (name, match_name, label, kind, match_str, match_product_number, site_kind, p_number_gen, replace_words, registered_by)
   VALUES ('HEY動画', 'HEY動画', 'おやじのハメ撮り', 3, '(4191|おやじのハメ撮り)', 'PPV[0-9]{3}', 0, 1, 'PPV', 'MANUAL 2018-12-02');
 
-SELECT * FROM maker WHERE created_at >= '2018-12-11';
-SELECT * FROM maker WHERE name like '%TOKYO%';
+SELECT * FROM maker WHERE created_at >= '2018-12-14';
+SELECT * FROM maker WHERE n5/05ame like '%TOKYO%';
+
+-- type actress, etc...
+-- type re, normal-text
+CREATE TABLE replace_info (
+  id MEDIUMINT NOT NULL AUTO_INCREMENT,
+  type ENUM('actress') DEFAULT 'actress',
+  source TEXT,
+  destination TEXT,
+  source_type ENUM('text', 're') DEFAULT 'text',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id)
+);
+
+INSERT INTO replace_info (type, source, destination) VALUES('actress', '黒川すみれ', '稲川なつめ');
+INSERT INTO replace_info (type, source, destination) VALUES('actress', '森下美怜', '相沢夏帆');
+INSERT INTO replace_info (type, source, destination) VALUES('actress', '松永さな', '今永さな');
+INSERT INTO replace_info (type, source, destination) VALUES('actress', '田中未久', '雨宮凜');
+INSERT INTO replace_info (type, source, destination) VALUES('actress', '福山美佳', '喜多方涼');
+
+INSERT INTO maker (name, match_name, label, kind, match_str, match_product_number, site_kind, replace_words, p_number_gen, deleted, registered_by)
+  VALUES ('S-Cute', 'S-Cute', 'S-Cute PREMIERE', 1, 'SQTE', '', 0, '', 0, 0, 'MANUAL 2018-12-16');
+
+INSERT INTO maker (name, match_name, label, kind, match_str, match_product_number, site_kind, replace_words, p_number_gen, deleted, registered_by)
+  VALUES ('HEY動画', 'HEY動画', 'シロートエキスプレスZ', 3, '(4172|シロートエキスプレスZ)', 'PPV[0-9]{3}', 0, null, 1, 0, 'MANUAL 2018-12-17');

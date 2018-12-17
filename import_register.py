@@ -336,7 +336,9 @@ class ImportRegister:
             if len(find_list) == 1:
                 match_maker = find_list[0]
             else:
-                err_list.append('jav.makersId [' + str(jav.makersId) + '] がmakersに存在しません ' + jav.title)
+                find_list = self.maker_dao.get_where_agreement(' WHERE id = %s', (jav.makersId, ))
+                if not len(find_list) == 1:
+                    err_list.append('jav.makersId [' + str(jav.makersId) + '] がmakersに存在しません ' + jav.title)
                 continue
 
             import_data = data.ImportData()
@@ -375,7 +377,18 @@ class ImportRegister:
             import_data.url = jav.url
             import_data.rating = jav.rating
             import_data.size = movie_size
-            import_data.searchResult = self.wiki.search(import_data.productNumber)
+
+            search_result = ''
+            if jav.searchResult:
+                search_result = jav.searchResult.strip()
+            if len(search_result) <= 0:
+                import_data.searchResult = self.wiki.search(import_data.productNumber)
+                if len(import_data.searchResult.strip()) <= 0:
+                    import_data.searchResult = 'no search result'
+                self.jav_dao.update_search_result(import_data.searchResult, jav.id)
+            else:
+                if not import_data.searchResult == 'no search result':
+                    import_data.searchResult = jav.searchResult
 
             '''
             filename, ext = os.path.splitext(pathname_p)
