@@ -117,7 +117,7 @@ SELECT * FROM jav WHERE id = 10067;
 INSERT INTO maker (name, match_name, label, kind, match_str, match_product_number, site_kind, p_number_gen, replace_words, registered_by)
   VALUES ('HEY動画', 'HEY動画', 'おやじのハメ撮り', 3, '(4191|おやじのハメ撮り)', 'PPV[0-9]{3}', 0, 1, 'PPV', 'MANUAL 2018-12-02');
 
-SELECT * FROM maker WHERE created_at >= '2018-12-14';
+SELECT * FROM maker WHERE created_at >= '2018-12-23';
 SELECT * FROM maker WHERE n5/05ame like '%TOKYO%';
 
 -- type actress, etc...
@@ -138,9 +138,18 @@ INSERT INTO replace_info (type, source, destination) VALUES('actress', '森下�
 INSERT INTO replace_info (type, source, destination) VALUES('actress', '松永さな', '今永さな');
 INSERT INTO replace_info (type, source, destination) VALUES('actress', '田中未久', '雨宮凜');
 INSERT INTO replace_info (type, source, destination) VALUES('actress', '福山美佳', '喜多方涼');
+INSERT INTO replace_info (type, source, destination) VALUES('actress', '豊田愛菜', '彩葉みおり');
 
 INSERT INTO maker (name, match_name, label, kind, match_str, match_product_number, site_kind, replace_words, p_number_gen, deleted, registered_by)
   VALUES ('S-Cute', 'S-Cute', 'S-Cute PREMIERE', 1, 'SQTE', '', 0, '', 0, 0, 'MANUAL 2018-12-16');
 
 INSERT INTO maker (name, match_name, label, kind, match_str, match_product_number, site_kind, replace_words, p_number_gen, deleted, registered_by)
   VALUES ('HEY動画', 'HEY動画', 'シロートエキスプレスZ', 3, '(4172|シロートエキスプレスZ)', 'PPV[0-9]{3}', 0, null, 1, 0, 'MANUAL 2018-12-17');
+INSERT INTO maker (name, match_name, label, kind, match_str, match_product_number, site_kind, replace_words, p_number_gen, deleted, registered_by)
+  VALUES ('HEY動画', 'HEY動画', '※完全素人※オフパコ配信者こてつ', 3, '(4183|※完全素人※オフパコ配信者こてつ)', 'PPV[0-9]{3}', 0, 'PPV', 1, 0, 'MANUAL 2018-12-17');
+
+INSERT INTO scraping.maker (name, match_name, label, kind, match_str, match_product_number, site_kind, replace_words, p_number_gen, deleted, registered_by)
+  VALUES ('HEY動画', 'HEY動画', 'おじさんの個人撮影', 3, '(4197|おじさんの個人撮影)', 'PPV[0-9]{3}', 0, 'PPV', 1, 0, 'MANUAL 2018-12-23');
+
+INSERT INTO maker (name, match_name, label, kind, match_str, match_product_number, site_kind, replace_words, p_number_gen, deleted, registered_by)
+  VALUES ('MGS', 'MGS', 'しろうとまんまん', 1, '345SIMM', '', 2, null, null, 0, null);

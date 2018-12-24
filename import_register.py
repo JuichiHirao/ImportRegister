@@ -31,6 +31,8 @@ class ImportRegister:
         self.import_dao = db.import_dao.ImportDao()
 
         self.wiki = site.wiki.SougouWiki()
+        self.mgs = site.mgs.Mgs()
+        self.import_parser = common.ImportParser()
 
         self.makers = self.maker_dao.get_all()
 
@@ -42,7 +44,7 @@ class ImportRegister:
         self.is_check = True
         # self.is_check = False
 
-        self.target_max = 60
+        self.target_max = 120
         # self.target_max = 4
         self.__set_files()
 
@@ -369,7 +371,8 @@ class ImportRegister:
             import_data.kind = match_maker.kind
             import_data.maker = match_maker.get_maker(jav.label)
             import_data.sellDate = jav.sellDate
-            import_data.tag = jav.actress
+            import_data.tag = self.import_parser.get_actress(jav)
+            print('tag [' + import_data.tag + ']')
             import_data.isNameOnly = True
             import_data.package = jav.package
             import_data.thumbnail = jav.thumbnail
@@ -377,6 +380,18 @@ class ImportRegister:
             import_data.url = jav.url
             import_data.rating = jav.rating
             import_data.size = movie_size
+
+            if match_maker.siteKind == 2:
+                if jav.detail and len(jav.detail.strip()) > 0:
+                    import_data.detail = jav.detail
+                else:
+                    detail, sell_date = self.mgs.get_info(jav.productNumber.upper())
+                    if len(sell_date.strip()) <= 0:
+                        import_data.detail = 'no mgs result'
+                    else:
+                        import_data.detail = jav.detail
+
+                    self.jav_dao.update_detail_and_sell_date(detail, sell_date, jav.id)
 
             search_result = ''
             if jav.searchResult:
