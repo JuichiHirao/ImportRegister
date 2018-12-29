@@ -33,6 +33,7 @@ class ImportRegister:
         self.wiki = site.wiki.SougouWiki()
         self.mgs = site.mgs.Mgs()
         self.import_parser = common.ImportParser()
+        self.auto_maker_parser = common.AutoMakerParser()
 
         self.makers = self.maker_dao.get_all()
 
@@ -164,42 +165,50 @@ class ImportRegister:
 
         return result_tuple
 
-    def __auto_maker_register(self, jav):
+    def __auto_maker_register(self, ng_reason: int = 0, jav: data.JavData() = None):
 
-        m_p = re.search('[A-Z0-9]{2,5}-[A-Z0-9]{2,4}', jav.title, re.IGNORECASE)
-        match_str = ''
-        err_msg = ''
-        if m_p:
-            p_number = m_p.group()
-            match_str = p_number.split('-')[0]
-        else:
-            err_msg = '[' + str(jav.id)\
-                      + '] 対象のmatch_strが存在しません [A-Z0-9]{3,5}-[A-Z0-9]{3,4}の正規表現と一致しません'\
-                      + jav.title
-            return False, err_msg
+        err_list = []
+        if ng_reason == -3 or ng_reason == -4 or ng_reason == -5:
 
-        if len(match_str) > 0 and self.maker_dao.is_exist(match_str.upper()):
-            err_msg = '[' + str(jav.id) + '] 発見!! [' + match_str + ']'
-            return False, err_msg
+            auto_maker = None
+            try:
+                auto_maker = self.auto_maker_parser.get_maker(jav)
+                err_list.append('  自動登録OK ' + jav.maker + ':' + jav.label)
+            except common.MatchStrNotFoundError as err:
+                err_list.append('  自動登録NG ' + str(err))
+            except common.MatchStrSameError as err:
+                err_list.append('  自動登録NG ' + str(err))
+                m_match_str = re.search('.*' + re.escape('発見!! [') + '(?P<match_str>[a-zA-Z]*)' + re.escape(']'), str(err))
+                if m_match_str:
+                    match_str = m_match_str.group('match_str')
+                    exist_maker = self.maker_dao.get_exist(match_str)
+                    err_list.append('\n'.join(exist_maker.get_print_list('    ')))
+                else:
+                    err_list.append('    no match_str')
 
-        maker = data.MakerData()
+            if not self.is_recover_check:
+                self.maker_dao.export(auto_maker)
 
-        maker.name = jav.maker.replace('/', '／')
-        maker.matchName = jav.maker
-        if jav.maker == jav.label:
-            pass
-        else:
-            maker.label = jav.label
-        maker.kind = 1
-        maker.matchStr = match_str.upper()
-        maker.registeredBy = 'AUTO ' + datetime.now().strftime('%Y-%m-%d')
+        if ng_reason == -7:
+            if re.search('[0-9A-Za-z]{3,10}-[0-9A-Za-z]{3,10}', jav.productNumber):
+                arr_match_str = jav.productNumber.split('-')
+                if not self.maker_dao.is_exist(arr_match_str[0]):
+                    if self.mgs.exist_product_number(jav.productNumber):
+                        mgs_data = self.mgs.get_info(jav.productNumber)
 
-        print('[' + str(jav.id) + ']' + jav.title)
-        maker.print()
+                        mgs_maker = self.auto_maker_parser.get_maker_from_site(mgs_data, 'MGS')
+                        err_list.append('  MGS 自動登録OK ' + jav.maker + ':' + jav.label)
+                        err_list.append('\n'.join(mgs_maker.get_print_list('    ')))
+                        if not self.is_recover_check:
+                            self.maker_dao.export(mgs_data)
+                    else:
+                        err_list.append('  -7 MGSに存在無し [' + jav.productNumber + ']')
+                else:
+                    err_list.append('  -7 makerに登録済み [' + arr_match_str[0] + ']')
+            else:
+                err_list.append('  -7 product_numberの形式が不正 [' + jav.productNumber + ']')
 
-        if not self.is_recover_check:
-            self.maker_dao.export(maker)
-        return True, ''
+        return err_list
 
     def recover_p_number_register(self, jav, tool: tool.p_number.ProductNumber):
 
@@ -242,7 +251,6 @@ class ImportRegister:
             target_idx = target_idx + 1
 
             if jav.isParse2 < 0:
-                error_message = ''
                 if jav.isParse2 == -1:
                     error_message = '-1 ' + str(jav.id) + ' メーカー完全一致だが、タイトル内に製品番号が一致しない [' + jav.maker + ']' + jav.title
                     print(error_message)
@@ -285,23 +293,8 @@ class ImportRegister:
                         for one_maker in find_maker_list:
                             err_list.append('    [' + one_maker.matchStr + '] ' + jav.label)
 
-                    '''
-                    find_maker_str = filter(lambda maker: maker.name == jav.maker, self.makers)
-                    find_maker_list = list(find_maker_str)
-
-                    if len(find_maker_list):
-                        err_list.append('  [' + jav.maker + '] ')
-                        for one_maker in find_maker_list:
-                            err_list.append('    [' + one_maker.matchStr + '] ' + jav.label)
-                    '''
-
-                    if ng_reason == -3 or ng_reason == -4 or ng_reason == -5:
-                        result, err_msg = self.__auto_maker_register(jav)
-                        if result:
-                            err_list.append('  自動登録OK ' + jav.maker + ':' + jav.label)
-                        else:
-                            err_list.append('  自動登録NG ' + err_msg)
-                # break
+                    auto_err_list = self.__auto_maker_register(ng_reason, jav)
+                    err_list.append(auto_err_list)
 
             if jav.makersId <= 0:
                 print('makersId is 0 [' + str(jav.id) + '] ' + jav.title)
@@ -372,7 +365,7 @@ class ImportRegister:
             import_data.maker = match_maker.get_maker(jav.label)
             import_data.sellDate = jav.sellDate
             import_data.tag = self.import_parser.get_actress(jav)
-            print('tag [' + import_data.tag + ']')
+            # print('tag [' + import_data.tag + ']')
             import_data.isNameOnly = True
             import_data.package = jav.package
             import_data.thumbnail = jav.thumbnail
@@ -380,16 +373,21 @@ class ImportRegister:
             import_data.url = jav.url
             import_data.rating = jav.rating
             import_data.size = movie_size
+            import_data.filename = self.import_parser.get_filename(import_data)
+            print('  filename : ' + import_data.filename + '')
 
             if match_maker.siteKind == 2:
                 if jav.detail and len(jav.detail.strip()) > 0:
                     import_data.detail = jav.detail
                 else:
-                    detail, sell_date = self.mgs.get_info(jav.productNumber.upper())
-                    if len(sell_date.strip()) <= 0:
+                    # detail, sell_date = self.mgs.get_info(jav.productNumber.upper())
+                    mgs_site_data = self.mgs.get_info(jav.productNumber.upper())
+                    if mgs_site_data is not None:
                         import_data.detail = 'no mgs result'
+                        detail = 'no mgs result'
+                        sell_date = '1900-01-01'
                     else:
-                        import_data.detail = jav.detail
+                        import_data.detail = detail
 
                     self.jav_dao.update_detail_and_sell_date(detail, sell_date, jav.id)
 
@@ -405,27 +403,6 @@ class ImportRegister:
                 if not import_data.searchResult == 'no search result':
                     import_data.searchResult = jav.searchResult
 
-            '''
-            filename, ext = os.path.splitext(pathname_p)
-            dest_p = os.path.join(self.register_path, import_data.productNumber + ext)
-            if os.path.isfile(dest_p):
-                dest_p_org = dest_p
-                dest_p = os.path.join(self.register_path, str(jav.id) + '-' + match_maker.matchStr + '_' + import_data.productNumber + ext)
-                err_list.append('パッケージファイルが存在 [' + dest_p + '] に変更 ' + dest_p_org)
-            if not self.is_check:
-                shutil.copy2(pathname_p, dest_p)
-            print('  ' + dest_p + " <- " + pathname_p)
-
-            filename, ext = os.path.splitext(pathname_th)
-            dest_th = os.path.join(self.register_path, import_data.productNumber + 'big' + ext)
-            if os.path.isfile(dest_th):
-                dest_th_org = dest_th
-                dest_th = os.path.join(self.register_path, str(jav.id) + '-' + match_maker.matchStr + '_' + import_data.productNumber + 'big' + ext)
-                err_list.append('サムネイルファイルが存在 [' + dest_th + '] に変更 ' + dest_th_org)
-            if not self.is_check:
-                shutil.copy2(pathname_th, dest_th)
-            print('  ' + dest_th + " <- " + pathname_th)
-            '''
             if not self.is_check:
                 self.import_dao.export_import(import_data)
                 self.jav_dao.update_is_selection(jav.id, 9)
