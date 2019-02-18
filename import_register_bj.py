@@ -5,6 +5,7 @@ import rarfile
 import shutil
 from javcore import data
 from javcore import db
+from javcore import site
 from send2trash import send2trash
 
 
@@ -31,10 +32,11 @@ class ImportRegisterBj:
 
         self.import_dao = db.import_dao.ImportDao()
         self.bj_dao = db.bj.BjDao()
+        self.wiki = site.wiki.SougouWiki()
 
         self.is_check = True
         # self.is_check = False
-        self.target_max = 30;
+        self.target_max = 100
         # self.__set_files()
 
     def arrange_execute(self):
@@ -56,15 +58,15 @@ class ImportRegisterBj:
             for jpeg_link in bj.thumbnails.split(' '):
                 pathname = os.path.join(self.store_path, jpeg_link.split('/')[-1])
                 if not os.path.exists(pathname):
-                    err_list.append('[' + bj.id + '] JPEGが存在しない [' + pathname + ']')
+                    err_list.append('[' + str(bj.id) + '] JPEGが存在しない [' + pathname + ']')
                 else:
                     jpeg_links.append(pathname)
 
             rar_filename = bj.downloadLink.split('/')[-1]
             rar_pathname = os.path.join(self.register_path, rar_filename)
             size = 0
-            if not os.path.exists(rar_pathname):
-                err_list.append('[' + bj.id + '] RARが存在しない [' + rar_pathname + ']')
+            if not os.path.isfile(rar_pathname):
+                err_list.append('[' + str(bj.id) + '] RARが存在しない [' + rar_pathname + ']')
                 is_err = True
             else:
                 size = os.path.getsize(rar_pathname)
@@ -74,7 +76,8 @@ class ImportRegisterBj:
             base_pathname = os.path.join(self.register_path, base_name)
 
             if not os.path.exists(base_pathname):
-                err_list.append('[' + bj.id + '] RARが存在しない [' + rar_pathname + ']')
+                # if os.path.isfile()
+                err_list.append('[' + str(bj.id) + '] DIRが存在しない [' + base_pathname + ']')
                 is_err = True
             else:
                 print('  OK ' + base_pathname)
@@ -170,6 +173,9 @@ class ImportRegisterBj:
                 break
 
             target_idx = target_idx + 1
+
+        for err in err_list:
+            print(err)
 
     def __get_actress(self, title, posted_in):
         actress = ''
