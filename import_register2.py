@@ -13,16 +13,18 @@ class ImportRegister:
 
     def __init__(self):
 
+        self.env = common.Environment()
         # rarfile.DEFAULT_CHARSET = "windows-1252"
         # rarfile.UNRAR_TOOL = 'unrar'
-        rarfile.UNRAR_TOOL = r'C:\\Program Files (x86)\\UnrarDLL\\Examples\\MASM\\unrar'
+        # rarfile.UNRAR_TOOL = r'C:\\Program Files (x86)\\UnrarDLL\\Examples\\MASM\\unrar'
+        rarfile.UNRAR_TOOL = r'C:\\myapp\\unrar'
         # rarfile.UNRAR_TOOL = r'C:\\SHARE\\unrar.exe'
         self.movie_extension = '.*\.avi$|.*\.wmv$|.*\.mpg$|.*ts$|.*divx$|.*mp4$' \
                                '|.*asf$|.*mkv$|.*rm$|.*rmvb$|.*m4v$|.*3gp$'
         self.rar_extension = '.*\.rar$'
 
-        self.store_path = "D:\DATA\jav-save"
-        self.register_path = "D:\DATA\Downloads"
+        self.store_path = self.env.get_image_path()
+        self.register_path = self.env.get_register_path()
 
         self.jav_dao = db.jav.JavDao()
         self.maker_dao = db.maker.MakerDao()
@@ -281,6 +283,7 @@ class ImportRegister:
             print('  filename : ' + import_data.filename + '')
             import_data.detail = jav.detail
             import_data.searchResult = jav.searchResult
+            import_data.javId = jav.id
 
             if not self.is_check:
                 self.import_dao.export_import(import_data)
