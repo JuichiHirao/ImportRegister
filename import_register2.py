@@ -137,6 +137,7 @@ class ImportRegister:
                             if not os.path.exists(extract_pathname):
                                 is_err_extract = True
                                 print('  rarファイルが解凍されていない [' + extract_file + ']' + file)
+                                rar_archive.extractall(path=self.register_path, members=rar_infolist)
                             else:
                                 if extract_pathname not in file_list:
                                     file_list.append(extract_pathname)

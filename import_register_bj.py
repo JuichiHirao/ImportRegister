@@ -25,7 +25,7 @@ class ImportRegisterBj:
             print('not exist path store_path [' + self.register_path + ']')
             exit(-1)
 
-        self.store_path = "D:\DATA\\bj-jpeg"
+        self.store_path = "C:\mydata\\bj-jpeg"
         if not os.path.exists(self.store_path):
             print('not exist path store_path [' + self.store_path + ']')
             exit(-1)
@@ -34,8 +34,8 @@ class ImportRegisterBj:
         self.bj_dao = db.bj.BjDao()
         self.wiki = site.wiki.SougouWiki()
 
-        self.is_check = True
-        # self.is_check = False
+        # self.is_check = True
+        self.is_check = False
         self.target_max = 100
         # self.__set_files()
 
