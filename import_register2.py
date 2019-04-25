@@ -2,6 +2,7 @@ import os
 import glob
 import re
 import rarfile
+import shutil
 from javcore import data
 from javcore import db
 from javcore import tool
@@ -43,7 +44,7 @@ class ImportRegister:
         self.is_check = True
         # self.is_check = False
 
-        self.target_max = 80
+        self.target_max = 150
         # self.target_max = 4
         self.__set_files()
 
@@ -221,6 +222,13 @@ class ImportRegister:
                     jav.thumbnail = thumbnail
                     is_exist = True
                     break
+                else:
+                    exist_pathname_th = self.env.get_exist_image_path(thumbnail)
+                    if len(exist_pathname_th) > 0:
+                        shutil.move(exist_pathname_th, pathname_th)
+                        jav.thumbnail = thumbnail
+                        is_exist = True
+                        break
 
             if not is_exist:
                 err_list.append('not exist thumbnail ' + str(jav.id) + ' [' + jav.thumbnail + '] ' + jav.title)
@@ -229,8 +237,13 @@ class ImportRegister:
             pathname_p = os.path.join(self.store_path, jav.package)
             # print('pathname_p ' + pathname_p)
             if not os.path.isfile(pathname_p):
-                err_list.append('not exist package ' + str(jav.id) + ' [' + jav.package + '] ' + jav.title)
-                continue
+                exist_pathname_p = self.env.get_exist_image_path(jav.package)
+                if len(exist_pathname_p) > 0:
+                    shutil.move(exist_pathname_p, pathname_p)
+                    err_list.append('file move ' + str(jav.id) + ' [' + jav.package + ']  [' + exist_pathname_p + ']')
+                else:
+                    err_list.append('not exist package ' + str(jav.id) + ' [' + jav.package + '] ' + jav.title)
+                    continue
 
             find_filter = filter(lambda maker: maker.id == jav.makersId, self.makers)
             find_list = list(find_filter)
@@ -239,8 +252,9 @@ class ImportRegister:
                 match_maker = find_list[0]
             else:
                 find_list = self.maker_dao.get_where_agreement(' WHERE id = %s', (jav.makersId, ))
-                if not len(find_list) == 1:
-                    err_list.append('jav.makersId [' + str(jav.makersId) + '] がmakersに存在しません ' + jav.title)
+                if find_list is not None:
+                    if not len(find_list) == 1:
+                        err_list.append('jav.makersId [' + str(jav.makersId) + '] がmakersに存在しません ' + jav.title)
                 continue
 
             import_data = data.ImportData()
@@ -263,10 +277,7 @@ class ImportRegister:
 
             import_data.postDate = jav.postDate
             import_data.copy_text = jav.title
-            if match_maker.name == 'SITE':
-                import_data.productNumber = jav.productNumber.lower()
-            else:
-                import_data.productNumber = jav.productNumber.upper()
+            import_data.productNumber = self.p_number_tool.get_registered_p_number(jav, match_maker)
             import_data.matchStr = match_maker.matchStr
             import_data.kind = match_maker.kind
             import_data.maker = match_maker.get_maker(jav.label)
