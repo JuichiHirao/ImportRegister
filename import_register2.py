@@ -213,26 +213,37 @@ class ImportRegister:
                 err_list.append('productNumber is None [' + str(jav.id) + '] ' + jav.title)
                 continue
 
-            files = self.__get_target_files(jav)
+            if jav.downloadLinks is None or len(jav.downloadLinks) <= 0:
+                err_list.append('downloadLinks is None [' + str(jav.id) + '] ' + jav.title)
+            else:
+                files = self.__get_target_files(jav)
 
             is_exist = False
-            for thumbnail in jav.thumbnail.split(' '):
-                pathname_th = os.path.join(self.store_path, thumbnail)
-                if os.path.isfile(pathname_th):
-                    jav.thumbnail = thumbnail
-                    is_exist = True
-                    break
-                else:
-                    exist_pathname_th = self.env.get_exist_image_path(thumbnail)
-                    if len(exist_pathname_th) > 0:
-                        shutil.move(exist_pathname_th, pathname_th)
+            if jav.thumbnail is not None and len(jav.thumbnail) > 0:
+                for thumbnail in jav.thumbnail.split(' '):
+                    pathname_th = os.path.join(self.store_path, thumbnail)
+                    if os.path.isfile(pathname_th):
                         jav.thumbnail = thumbnail
                         is_exist = True
                         break
+                    else:
+                        exist_pathname_th = self.env.get_exist_image_path(thumbnail)
+                        if len(exist_pathname_th) > 0:
+                            shutil.move(exist_pathname_th, pathname_th)
+                            jav.thumbnail = thumbnail
+                            is_exist = True
+                            break
+            else:
+                err_list.append('not exist thumbnail ' + str(jav.id) + ' [ null ] ' + jav.title)
+                is_exist = True
 
             if not is_exist:
                 err_list.append('not exist thumbnail ' + str(jav.id) + ' [' + jav.thumbnail + '] ' + jav.title)
                 # continue
+
+            i = 0
+            if jav.id == 31607:
+                i = i + 1
 
             pathname_p = os.path.join(self.store_path, jav.package)
             # print('pathname_p ' + pathname_p)

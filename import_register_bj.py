@@ -1,8 +1,10 @@
-import glob
+# import glob
 import os
 import re
 import rarfile
 import shutil
+import glob
+from javcore import common
 from javcore import data
 from javcore import db
 from javcore import site
@@ -34,8 +36,8 @@ class ImportRegisterBj:
         self.bj_dao = db.bj.BjDao()
         self.wiki = site.wiki.SougouWiki()
 
-        # self.is_check = True
         self.is_check = True
+        # self.is_check = False
         self.target_max = 200
         # self.__set_files()
 
@@ -43,27 +45,26 @@ class ImportRegisterBj:
 
         bjs = self.bj_dao.get_all()
 
+        # print('count bjs [{}]'.format(len(bjs)))
         err_list = []
         target_idx = 1
+        bj_parser = common.BjParser()
+        idx2 = 0
         for idx, bj in enumerate(bjs):
 
             is_err = False
-
             if not bj.isSelection == 1:
                 continue
 
+            bj.parse(bj_parser)
             bj.print()
 
-            jpeg_links = []
-            for jpeg_link in bj.thumbnails.split(' '):
-                pathname = os.path.join(self.store_path, jpeg_link.split('/')[-1])
-                if not os.path.exists(pathname):
+            for thumbnail_info in bj.thumbnailInfoList:
+                pathname = os.path.join(self.store_path, thumbnail_info.filename)
+                if not os.path.isfile(pathname):
                     err_list.append('[' + str(bj.id) + '] JPEGが存在しない [' + pathname + ']')
-                else:
-                    jpeg_links.append(pathname)
 
-            rar_filename = bj.downloadLink.split('/')[-1]
-            rar_pathname = os.path.join(self.register_path, rar_filename)
+            rar_pathname = os.path.join(self.register_path, bj.rar_filename)
             size = 0
             if not os.path.isfile(rar_pathname):
                 err_list.append('[' + str(bj.id) + '] RARが存在しない [' + rar_pathname + ']')
@@ -72,59 +73,36 @@ class ImportRegisterBj:
                 size = os.path.getsize(rar_pathname)
                 print('  OK ' + rar_pathname)
 
-            base_name = rar_filename.replace('.rar', '')
-            base_pathname = os.path.join(self.register_path, base_name)
+            base_pathname = os.path.join(self.register_path, bj.basename)
 
             if not os.path.exists(base_pathname):
-                # if os.path.isfile()
                 err_list.append('[' + str(bj.id) + '] DIRが存在しない [' + base_pathname + ']')
                 is_err = True
             else:
                 print('  OK ' + base_pathname)
 
             if is_err:
-                break
+                continue
 
-            tag = ''
-            actress = self.__get_actress(bj.title, bj.postedIn)
-            if len(actress) > 0:
-                print('    actress [' + actress + ']')
-                tag = 'KOREAN BJ ' + actress
-                tag = tag.replace('BJ BJ ', 'BJ ')
-                target_name = base_name + ' ' + bj.title + ' ' + actress
-            else:
-                target_name = base_name + ' ' + bj.title
-            print('  ' + target_name)
-
-            dest_register_path = self.register_path
-
-            idx = 1
-            if len(jpeg_links) == 1:
-                idx = 0
-            for jpeg in jpeg_links:
-                suffix = ''
-                if idx > 0:
-                    suffix = '_' + str(idx)
-
-                dest_pathname = os.path.join(dest_register_path, target_name + suffix + '.jpg')
+            for thumbnail_info in bj.thumbnailInfoList:
+                src_pathname = os.path.join(self.store_path, thumbnail_info.filename)
+                dest_pathname = os.path.join(self.register_path, thumbnail_info.dest_filename)
                 if not self.is_check:
-                    shutil.copy2(jpeg, dest_pathname)
+                    shutil.copy2(src_pathname, dest_pathname)
                 else:
-                    print('      ' + dest_pathname + ' <-- ' + jpeg)
-
-                idx = idx + 1
+                    print('  {} -> {}'.format(src_pathname, dest_pathname))
 
             import_data = data.ImportData()
             import_data.title = bj.title
             import_data.postDate = bj.postDate
-            import_data.copy_text = target_name
-            import_data.productNumber = base_name
+            import_data.copy_text = bj.base_filename
+            import_data.productNumber = bj.basename
             import_data.kind = 5
-            import_data.actress = actress
+            import_data.actress = bj.actress
             import_data.isNameOnly = True
             import_data.url = bj.url
             import_data.rating = bj.rating
-            import_data.tag = tag
+            import_data.tag = bj.tag
             import_data.maker = bj.postedIn
             import_data.size = size
 
