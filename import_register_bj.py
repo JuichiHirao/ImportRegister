@@ -20,7 +20,7 @@ class ImportRegisterBj:
         rarfile.UNRAR_TOOL = r'C:\\Program Files (x86)\\UnrarDLL\\Examples\\MASM\\unrar'
         # rarfile.UNRAR_TOOL = r'C:\\SHARE\\unrar.exe'
         self.movie_extension = '.*\.avi$|.*\.wmv$|.*\.mpg$|.*ts$|.*divx$|.*mp4$' \
-                               '|.*asf$|.*mkv$|.*rm$|.*rmvb$|.*m4v$|.*3gp$'
+                               '|.*asf$|.*mkv$|.*rm$|.*rmvb$|.*m4v$|.*3gp$|.*flv'
 
         self.register_path = "D:\DATA\Downloads\TEMP"
         if not os.path.exists(self.register_path):
@@ -38,7 +38,7 @@ class ImportRegisterBj:
 
         self.is_check = True
         # self.is_check = False
-        self.target_max = 200
+        # self.target_max = 200
         # self.__set_files()
 
     def arrange_execute(self):
@@ -76,8 +76,17 @@ class ImportRegisterBj:
             base_pathname = os.path.join(self.register_path, bj.basename)
 
             if not os.path.exists(base_pathname):
-                err_list.append('[' + str(bj.id) + '] DIRが存在しない [' + base_pathname + ']')
-                is_err = True
+                file_list = glob.glob(os.path.join(self.register_path, bj.basename + '*'))
+                is_exist = False
+                for file in file_list:
+                    if re.search(self.movie_extension, file, re.IGNORECASE):
+                        # err_list.append('[{}] DIRなしで動画が存在する [{}] {}'.format(bj.id, base_pathname, file_list))
+                        is_exist = True
+                        break
+
+                if is_exist is False:
+                    err_list.append('[' + str(bj.id) + '] DIRが存在しない [' + base_pathname + ']')
+                    is_err = True
             else:
                 print('  OK ' + base_pathname)
 
